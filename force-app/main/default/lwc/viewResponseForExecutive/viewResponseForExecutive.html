@@ -1,6 +1,5 @@
 <template>
     <div class="container">
-        <!-- Loading Spinner -->
         <template if:true={loading}>
             <lightning-card>
                 <div class="spinner-container slds-p-around_medium slds-text-align_center">
@@ -10,7 +9,6 @@
             </lightning-card>
         </template>
         
-        <!-- Error Display -->
         <template if:true={hasError}>
             <lightning-card>
                 <div class="slds-p-around_medium slds-text-align_center error-message">
@@ -20,7 +18,6 @@
             </lightning-card>
         </template>
         
-        <!-- User Info Section -->
         <template if:false={loading}>
             <lightning-card title="Employee Information" icon-name="standard:user">
                 <div class="slds-p-around_medium">
@@ -41,7 +38,6 @@
                 </div>
             </lightning-card>
             
-            <!-- Feedback Responses Section -->
             <template if:true={hasResponses}>
                 <lightning-card title="Submitted Feedback Responses" icon-name="standard:feedback">
                     <div class="slds-p-around_medium">
@@ -72,7 +68,6 @@
                 </lightning-card>
             </template>
             
-            <!-- No Responses Message -->
             <template if:false={hasResponses}>
                 <template if:false={hasError}>
                     <lightning-card>

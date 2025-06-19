@@ -1,0 +1,32 @@
+18th June 2025.
+First, I created two new profiles: Executive and Manager. I started writing Apex code to fetch user data. I created a new LWC component to check if I could get user details including profile and department. This was specifically for the employee (executive) role. Since I also needed to fetch questions for the executive, I created a new Apex class (QuestionsController) with methods for fetching and submitting questions.
+
+I wrote a function to get questions linked to the active form of the user's department (by using UserController to fetch the user’s department), and then retrieved questions based on that form ID.
+
+Next, I created an LWC component to test this by logging console.log() outputs. Once I confirmed the questions were being accessed correctly, I created a page to display them. When I logged in as an executive, I couldn't access the Lightning Experience, so I updated the Executive profile to enable it.
+
+Then I faced another issue: the Executive profile didn’t have access to the User Apex class. To resolve this, I created a custom permission (Executive_Access) and assigned it through a permission set (Executive Permission Set). In this set, I granted access to the Apex class, the app I created using App Manager, and any relevant objects.
+
+Finally, after assigning the permission set to the executive user, I was able to log in and view everything properly from the Executive Sales account.
+
+
+------------------------------------------------------------------
+
+19th June 2025.
+Handled Employee feedback submission by creatiing apex class.
+Then created a apex function to get questions and answers both for an employee and display them once it has been submitted.
+I also created a new LWC component to display the questions and answers for the employee role.
+
+how to move ahead.
+now to move to the manager profile.
+
+The manager should be able to view the questions and answers submitted by all employees in their department. So first i need an apex function in the QuestionsController class to fetch all questions and answers for a specific department. This will involve querying the Question and Answer objects based on the department ID. so the response will be a list of questions and all the answers by every employee in that department. 
+Then, I will create a new LWC component to display this information in a user-friendly format. The component should allow the manager to see all questions and answers submitted by employees in their department.
+
+we will later on enter the part where manager himself can submit questions and answers, but for now, we will focus on displaying the existing data.
+
+after we do that we will enable the manager to click on a profile, 
+no wait. i should rather create one function to get the questions and the answers for the employee and manager both for one question ID.
+There should be question id, employee response, manager response (if there or null) for every employee.
+
+

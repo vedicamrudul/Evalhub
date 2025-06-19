@@ -1,7 +1,6 @@
 <template>
     <div class="container">
-        <!-- Loading state - only show this when loading -->
-        <template if:true={isLoading}>
+\        <template if:true={isLoading}>
             <lightning-card title="Loading..." icon-name="utility:spinner">
                 <div class="slds-p-around_medium slds-text-align_center">
                     <lightning-spinner alternative-text="Loading..." size="medium"></lightning-spinner>
@@ -10,9 +9,7 @@
             </lightning-card>
         </template>
 
-        <!-- Content when not loading -->
         <template if:false={isLoading}>
-            <!-- Already submitted state -->
             <template if:true={isSubmitted}>
                 <lightning-card title="Thank You" icon-name="action:approval" class="slds-theme_success">
                     <p class="slds-p-around_small success-message">
@@ -22,7 +19,6 @@
                 </lightning-card>
             </template>
 
-            <!-- Not submitted state - show form -->
             <template if:false={isSubmitted}>
                 <lightning-card title="Employee Feedback Form" icon-name="standard:feedback">
                     <div class="slds-p-around_small">
@@ -32,7 +28,6 @@
                     </div>
                 </lightning-card>
 
-                <!-- User Info Card -->
                 <lightning-card title="User Information" icon-name="standard:user">
                     <div class="slds-var-p-horizontal_small">
                         <template if:true={userData}>
@@ -43,7 +38,6 @@
                     </div>
                 </lightning-card>
 
-                <!-- Questions Card -->
                 <lightning-card title="Feedback Questions" icon-name="standard:question_feed">
                     <div class="slds-var-p-horizontal_small">
                         <template if:true={questions}>
