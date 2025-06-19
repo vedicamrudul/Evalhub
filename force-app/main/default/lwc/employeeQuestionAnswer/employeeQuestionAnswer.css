@@ -1,0 +1,77 @@
+.container {
+    font-family: 'Salesforce Sans', Arial, sans-serif;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+.container lightning-card {
+    margin-bottom: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* User Info Card styling */
+.container lightning-card:first-child {
+    background-color: #e6f2ff; /* Light pastel blue */
+    border: 1px solid #c8e1ff;
+}
+
+/* Questions Card styling */
+.container lightning-card:nth-child(2) {
+    background-color: #f0f8ff; /* Alice blue */
+    border: 1px solid #d1e5ff;
+}
+
+/* Thank You Card styling */
+.container lightning-card.slds-theme_success {
+    background-color: #e6ffed; /* Light pastel green */
+    border: 1px solid #b3f0c5;
+}
+
+/* Question container styling */
+.question-container {
+    background-color: white;
+    border-radius: 6px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-left: 4px solid #a6c8ff; /* Medium pastel blue */
+}
+
+/* Question text styling */
+.question-text {
+    color: #2c5282; /* Darker blue */
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Submit button styling */
+lightning-button.submit-button {
+    margin-top: 1.5rem;
+}
+
+lightning-button.submit-button button {
+    background-color: #4c9aff !important; /* Vibrant blue */
+    border-color: #4c9aff !important;
+    transition: all 0.3s ease;
+}
+
+lightning-button.submit-button button:hover {
+    background-color: #2684ff !important; /* Slightly darker blue on hover */
+    transform: translateY(-2px);
+}
+
+/* Success message styling */
+.success-message {
+    text-align: center;
+    font-size: 1.2rem;
+    padding: 1.5rem;
+    color: #2e7d32;
+}
+
+/* Input field styling */
+lightning-input, lightning-combobox {
+    --slds-c-input-color-border: #b3d1ff;
+    --slds-c-input-color-background: white;
+    margin-bottom: 0.5rem;
+}

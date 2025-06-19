@@ -1,0 +1,94 @@
+<template>
+    <div class="container">
+        <!-- Loading state - only show this when loading -->
+        <template if:true={isLoading}>
+            <lightning-card title="Loading..." icon-name="utility:spinner">
+                <div class="slds-p-around_medium slds-text-align_center">
+                    <lightning-spinner alternative-text="Loading..." size="medium"></lightning-spinner>
+                    <p class="slds-p-top_small">Loading your feedback form...</p>
+                </div>
+            </lightning-card>
+        </template>
+
+        <!-- Content when not loading -->
+        <template if:false={isLoading}>
+            <!-- Already submitted state -->
+            <template if:true={isSubmitted}>
+                <lightning-card title="Thank You" icon-name="action:approval" class="slds-theme_success">
+                    <p class="slds-p-around_small success-message">
+                        Thank you for your feedback!<br />
+                        Check the View Submission tab to see your answers.
+                    </p>
+                </lightning-card>
+            </template>
+
+            <!-- Not submitted state - show form -->
+            <template if:false={isSubmitted}>
+                <lightning-card title="Employee Feedback Form" icon-name="standard:feedback">
+                    <div class="slds-p-around_small">
+                        <p class="slds-text-body_regular slds-m-bottom_medium">
+                            Please provide your feedback by answering the questions below.
+                        </p>
+                    </div>
+                </lightning-card>
+
+                <!-- User Info Card -->
+                <lightning-card title="User Information" icon-name="standard:user">
+                    <div class="slds-var-p-horizontal_small">
+                        <template if:true={userData}>
+                            <p><strong>Name:</strong> {userData.Name}</p>
+                            <p><strong>Department:</strong> {userData.department__c}</p>
+                            <p><strong>Profile:</strong> {userData.Profile.Name}</p>
+                        </template>
+                    </div>
+                </lightning-card>
+
+                <!-- Questions Card -->
+                <lightning-card title="Feedback Questions" icon-name="standard:question_feed">
+                    <div class="slds-var-p-horizontal_small">
+                        <template if:true={questions}>
+                            <template for:each={questions} for:item="question">
+                                <div key={question.Id} class="question-container slds-m-vertical_small">
+                                    <p class="question-text"><strong>{question.Question_Text__c}</strong></p>
+
+                                    <template if:true={question.isText}>
+                                        <lightning-input type="text" label="Answer" data-id={question.Id}></lightning-input>
+                                    </template>
+
+                                    <template if:true={question.isNumber}>
+                                        <lightning-input type="number" label="Answer"
+                                            data-id={question.Id}></lightning-input>
+                                    </template>
+
+                                    <template if:true={question.isPicklist}>
+                                        <lightning-combobox label="Select an option" options={question.picklistOptions}
+                                            data-id={question.Id} value="">
+                                        </lightning-combobox>
+                                    </template>
+                                </div>
+                            </template>
+
+                            <div class="slds-m-top_medium slds-text-align_center">
+                                <template if:true={isSubmitting}>
+                                    <lightning-button variant="brand" label="Submitting..." disabled="true">
+                                    </lightning-button>
+                                    <div class="slds-p-around_medium">
+                                        <lightning-spinner alternative-text="Submitting..." size="small"></lightning-spinner>
+                                    </div>
+                                </template>
+                                <template if:false={isSubmitting}>
+                                    <lightning-button variant="brand" label="Submit Answers" onclick={handleSubmit}>
+                                    </lightning-button>
+                                </template>
+                            </div>
+                        </template>
+
+                        <template if:true={error}>
+                            <p class="slds-text-color_error">Error: {error}</p>
+                        </template>
+                    </div>
+                </lightning-card>
+            </template>
+        </template>
+    </div>
+</template>
