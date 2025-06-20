@@ -1,0 +1,30 @@
+<template>
+    <lightning-card title="Executives Under Current Manager" icon-name="standard:user">
+        <div class="slds-m-around_medium">
+            <template if:true={isLoading}>
+                <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+            </template>
+            
+            <template if:true={error}>
+                <div class="slds-text-color_error">
+                    Error loading data: {error}
+                </div>
+            </template>
+            
+            <template if:true={hasUsers}>
+                <lightning-datatable
+                    key-field="Id"
+                    data={users}
+                    columns={columns}
+                    hide-checkbox-column
+                ></lightning-datatable>
+            </template>
+            
+            <template if:false={hasUsers}>
+                <div class="slds-p-around_medium slds-text-align_center">
+                    No executives found under your management.
+                </div>
+            </template>
+        </div>
+    </lightning-card>
+</template>
