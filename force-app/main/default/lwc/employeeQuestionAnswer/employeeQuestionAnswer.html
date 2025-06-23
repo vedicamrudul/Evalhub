@@ -14,49 +14,51 @@
         <template if:false={isLoading}>
             <!-- Submitted State -->
             <template if:true={feedbackData.hasSubmitted}>
-                <lightning-card title="Thank You" icon-name="action:approval" class="slds-theme_success">
-                    <div class="slds-p-around_small success-message">
-                        <p>Thank you for your feedback!</p>
-                        <p class="slds-m-top_small">Below are your submitted answers:</p>
-                    </div>
-                </lightning-card>
+                <!-- Thank You message only visible when not viewing responses -->
+                <template if:false={isViewingResponses}>
+                    <lightning-card title="Thank You" icon-name="action:approval" class="slds-theme_success">
+                        <div class="slds-p-around_small success-message">
+                            <p>Thank you for your feedback!</p>
+                        </div>
+                    </lightning-card>
+                </template>
 
-                <lightning-card title="Your Feedback Responses" icon-name="standard:feedback">
-                    <div class="slds-p-around_small">
-                        <template for:each={feedbackData.questions} for:item="question">
-                            <div key={question.id} class="slds-m-bottom_medium">
-                                <p class="question-text slds-text-heading_small">
-                                    <strong>{question.questionText}</strong>
-                                </p>
-                                <p class="slds-m-top_x-small slds-p-left_medium">
-                                    <lightning-formatted-text value={question.answer}></lightning-formatted-text>
-                                </p>
-                            </div>
-                        </template>
-                    </div>
-                </lightning-card>
+                <!-- buttons for viewing the submissions - always visible -->
+                <div class="button-container slds-m-top_medium slds-m-bottom_medium">
+                    <lightning-button label="View Your Submission" onclick={handleViewSubmissionClick}></lightning-button>
+                    <template if:true={feedbackData.hasManagerSubmitted}>
+                        <lightning-button label="View Manager Feedback" onclick={handleViewManagerClick}></lightning-button>
+                    </template>
+                </div>
+
+                <!-- Content sections that toggle -->
+                <template if:true={viewSubmissionButtonClicked}>
+                    <lightning-card title="Your Feedback Responses" icon-name="standard:feedback">
+                        <div class="slds-p-around_small">
+                            <template for:each={feedbackData.questions} for:item="question">
+                                <div key={question.id} class="slds-m-bottom_medium">
+                                    <p class="question-text slds-text-heading_small">
+                                        <strong>{question.questionText}</strong>
+                                    </p>
+                                    <p class="slds-m-top_x-small slds-p-left_medium">
+                                        <lightning-formatted-text
+                                            value={question.answer}></lightning-formatted-text>
+                                    </p>
+                                </div>
+                            </template>
+                        </div>
+                    </lightning-card>
+                </template>
+                
+                <template if:true={viewManagerFeedbackClicked}>
+                    <lightning-card title="Manager Feedback" icon-name="standard:feedback">
+                        <div class="manager-feedback-container">{feedbackData.managerResponseText}</div>
+                    </lightning-card>
+                </template>
             </template>
 
             <!-- Not Submitted State -->
             <template if:false={feedbackData.hasSubmitted}>
-                <lightning-card title="Employee Feedback Form" icon-name="standard:feedback">
-                    <div class="slds-p-around_small">
-                        <p class="slds-text-body_regular slds-m-bottom_medium">
-                            Please provide your feedback by answering the questions below.
-                        </p>
-                    </div>
-                </lightning-card>
-
-                <lightning-card title="User Information" icon-name="standard:user">
-                    <div class="slds-var-p-horizontal_small">
-                        <template if:true={userData}>
-                            <p><strong>Name:</strong> {userData.Name}</p>
-                            <p><strong>Department:</strong> {userData.Department}</p>
-                            <p><strong>Profile:</strong> {userData.Profile.Name}</p>
-                        </template>
-                    </div>
-                </lightning-card>
-
                 <lightning-card title="Feedback Questions" icon-name="standard:question_feed">
                     <div class="slds-var-p-horizontal_small">
                         <template for:each={feedbackData.questions} for:item="question">
@@ -64,18 +66,17 @@
                                 <p class="question-text"><strong>{question.questionText}</strong></p>
 
                                 <template if:true={question.isText}>
-                                    <lightning-input type="text" label="Answer" 
-                                        data-id={question.id} required></lightning-input>
+                                    <lightning-input type="text" label="Answer" data-id={question.id}
+                                        required></lightning-input>
                                 </template>
 
                                 <template if:true={question.isNumber}>
-                                    <lightning-input type="number" label="Answer (1-5)"
-                                        data-id={question.id} min="1" max="5" required></lightning-input>
+                                    <lightning-input type="number" label="Answer (1-5)" data-id={question.id} min="1"
+                                        max="5" required></lightning-input>
                                 </template>
 
                                 <template if:true={question.isPicklist}>
-                                    <lightning-combobox label="Select an option" 
-                                        options={question.picklistOptions}
+                                    <lightning-combobox label="Select an option" options={question.picklistOptions}
                                         data-id={question.id} value="" required>
                                     </lightning-combobox>
                                 </template>
@@ -87,7 +88,8 @@
                                 <lightning-button variant="brand" label="Submitting..." disabled="true">
                                 </lightning-button>
                                 <div class="slds-p-around_medium">
-                                    <lightning-spinner alternative-text="Submitting..." size="small"></lightning-spinner>
+                                    <lightning-spinner alternative-text="Submitting..."
+                                        size="small"></lightning-spinner>
                                 </div>
                             </template>
                             <template if:false={isSubmitting}>

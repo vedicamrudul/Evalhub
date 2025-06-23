@@ -46,18 +46,16 @@
                                                         <template if:true={displayUser.hasEmployeeSubmitted}>
                                                             <template for:each={displayUser.questions}
                                                                 for:item="question">
-                                                                <div key={question.id} class="slds-m-bottom_small">
-                                                                    <div class="slds-text-heading_small">
-                                                                        {question.questionText}</div>
+                                                                <div key={question.id} class="question-item">
+                                                                    <div class="question-text">{question.questionText}
+                                                                    </div>
                                                                     <template if:true={question.hasResponse}>
-                                                                        <div
-                                                                            class="slds-text-body_regular slds-m-top_xx-small">
+                                                                        <div class="answer-text">
                                                                             {question.answer}
                                                                         </div>
                                                                     </template>
                                                                     <template if:false={question.hasResponse}>
-                                                                        <div
-                                                                            class="slds-text-body_regular slds-text-color_weak slds-m-top_xx-small">
+                                                                        <div class="no-response">
                                                                             No response provided
                                                                         </div>
                                                                     </template>

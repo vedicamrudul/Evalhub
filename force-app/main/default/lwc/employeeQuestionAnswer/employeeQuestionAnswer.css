@@ -1,77 +1,193 @@
 .container {
     font-family: 'Salesforce Sans', Arial, sans-serif;
-    max-width: 800px;
+    max-width: 900px;
     margin: 0 auto;
-    padding: 1rem;
+    padding: 1.5rem;
+    background-color: #f8fafc;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
 
 .container lightning-card {
-    margin-bottom: 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    border: none;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.container lightning-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
 }
 
 /* User Info Card styling */
 .container lightning-card:first-child {
-    background-color: #e6f2ff; /* Light pastel blue */
-    border: 1px solid #c8e1ff;
+    background-color: #e7f5ff; /* Light pastel blue */
+    border-left: 5px solid #74c0fc;
 }
 
 /* Questions Card styling */
 .container lightning-card:nth-child(2) {
-    background-color: #f0f8ff; /* Alice blue */
-    border: 1px solid #d1e5ff;
+    background-color: #f3f9ff; /* Soft alice blue */
+    border-left: 5px solid #91c9ff;
 }
 
 /* Thank You Card styling */
 .container lightning-card.slds-theme_success {
-    background-color: #e6ffed; /* Light pastel green */
-    border: 1px solid #b3f0c5;
+    background-color: #ebfbee; /* Light pastel green */
+    border-left: 5px solid #8bd8a5;
 }
 
 /* Question container styling */
 .question-container {
     background-color: white;
-    border-radius: 6px;
-    padding: 1rem;
-    margin-bottom: 1rem;
-    border-left: 4px solid #a6c8ff; /* Medium pastel blue */
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin-bottom: 1.25rem;
+    border-left: 5px solid #a6c8ff; /* Medium pastel blue */
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.question-container:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-left-color: #74b0ff;
 }
 
 /* Question text styling */
 .question-text {
     color: #2c5282; /* Darker blue */
     font-size: 1.1rem;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
+    line-height: 1.5;
+}
+
+/* Feedback responses styling */
+.slds-m-bottom_medium {
+    background-color: #f9f9ff;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.25rem;
+    border-left: 4px solid #d0bfff; /* Soft lavender */
+    transition: all 0.2s ease;
+}
+
+.slds-m-bottom_medium:hover {
+    background-color: #f3f0ff;
+    border-left-color: #b197fc;
+}
+
+/* Button styling */
+lightning-button {
+    margin: 0.5rem 0.75rem 1.5rem 0;
+    --slds-c-button-radius-border: 8px;
+}
+
+lightning-button button {
+    padding: 0.5rem 1.25rem !important;
+    font-weight: 500 !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* View Submission Button */
+lightning-button[label="View Your Submission"] button {
+    background-color: #dbe9ff !important;
+    border-color: #c2d8ff !important;
+    color: #2c5282 !important;
+}
+
+lightning-button[label="View Your Submission"] button:hover {
+    background-color: #c2d8ff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* View Manager Feedback Button */
+lightning-button[label="View Manager Feedback"] button {
+    background-color: #e9dbff !important;
+    border-color: #d4c2ff !important;
+    color: #4c2889 !important;
+}
+
+lightning-button[label="View Manager Feedback"] button:hover {
+    background-color: #d4c2ff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
 }
 
 /* Submit button styling */
-lightning-button.submit-button {
-    margin-top: 1.5rem;
-}
-
-lightning-button.submit-button button {
+lightning-button[variant="brand"] button {
     background-color: #4c9aff !important; /* Vibrant blue */
     border-color: #4c9aff !important;
     transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(76, 154, 255, 0.3) !important;
 }
 
-lightning-button.submit-button button:hover {
+lightning-button[variant="brand"] button:hover {
     background-color: #2684ff !important; /* Slightly darker blue on hover */
     transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(76, 154, 255, 0.4) !important;
 }
 
 /* Success message styling */
 .success-message {
     text-align: center;
-    font-size: 1.2rem;
-    padding: 1.5rem;
+    font-size: 1.25rem;
+    padding: 1.75rem;
     color: #2e7d32;
+    line-height: 1.6;
+}
+
+.success-message p:first-child {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: #1b5e20;
 }
 
 /* Input field styling */
 lightning-input, lightning-combobox {
-    --slds-c-input-color-border: #b3d1ff;
+    --slds-c-input-color-border: #c2d8ff;
     --slds-c-input-color-background: white;
-    margin-bottom: 0.5rem;
+    --slds-c-input-radius-border: 6px;
+    --slds-c-input-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+    margin-bottom: 0.75rem;
+}
+
+/* Answer text styling */
+.slds-m-top_x-small {
+    background-color: white;
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+    color: #4a5568;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+/* Manager feedback styling - Fix for Salesforce LWC limitations */
+.manager-feedback-container {
+    background-color: #f8f0ff;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 1rem 0;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+    border-left: 5px solid #d0a9ff;
+    color: #4a5568;
+    font-size: 1.05rem;
+    line-height: 1.6;
+}
+
+/* Button container styling */
+.button-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }

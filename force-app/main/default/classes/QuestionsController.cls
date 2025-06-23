@@ -15,6 +15,8 @@ public with sharing class QuestionsController {
     public String employeeId { get; set; } // Must match JS exactly
  }
 
+
+ // --------------------------------------------------------------------------------------
    @AuraEnabled(cacheable=true)
    public static Map<String, Object> getFeedbackData() {
     // Get current user
@@ -82,12 +84,28 @@ public with sharing class QuestionsController {
         
         questions.add(qData);
     }
-    
+
+    // lets get manager's response for this user for this form. 
+
+
+    List<Manager_Response__c> managerResponses = [
+        SELECT Id, Manager_Response_Test__c
+        FROM Manager_Response__c 
+        WHERE User_Lookup__c = :currentUser.Id
+        AND Feedback_Form_Lookup__c = :form.Id
+        LIMIT 1
+    ];
+
+
+    response.put('managerResponseText', managerResponses.isEmpty() ? '' : managerResponses[0].Manager_Response_Test__c);
+    response.put('hasManagerSubmitted', !managerResponses.isEmpty());
     response.put('questions', questions);
     response.put('hasSubmitted', !responses.isEmpty());
     
     return response;
 }
+
+
 @AuraEnabled(cacheable=true)
 public static Map<String, Object> getEmployeeResponseForManager(Id employeeId){
     // Get current user
@@ -248,7 +266,7 @@ public static String submitManagerResponse(ManagerResponse response) {
 
 }
 
-    //function to submit feedback response.
+    //function to submit feedback response By executive or employee
     @AuraEnabled
     public static String submitFeedback(List<QuestionAnswerPair> answers, Id respondentId) {
 
@@ -284,4 +302,9 @@ public static String submitManagerResponse(ManagerResponse response) {
               return 'Error submitting feedback: ' + e.getMessage();
             }
     }
+
+    // --------------------------------------------------------------------------------------
+    // Lets do for admin.
+
+
 }

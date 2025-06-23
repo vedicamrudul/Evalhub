@@ -160,7 +160,8 @@ export default class ViewAllExecutiveUnderManager extends LightningElement {
                         ...this.userResponses,
                         [userId]: {
                             ...this.userResponses[userId],
-                            hasManagerSubmitted: true
+                            hasManagerSubmitted: true,
+                            managerResponseText: feedbackText // Add this line to update the displayed text
                         }
                     };
                 }

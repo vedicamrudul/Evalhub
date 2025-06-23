@@ -10,6 +10,13 @@ export default class EmployeeQuestionAnswer extends LightningElement {
     @track error;
     @track isLoading = true;
     @track isSubmitting = false;
+    @track viewSubmissionButtonClicked = false;
+    @track viewManagerFeedbackClicked = false;
+    
+    // New property to track if any responses are being viewed
+    get isViewingResponses() {
+        return this.viewSubmissionButtonClicked || this.viewManagerFeedbackClicked;
+    }
 
     connectedCallback() {
         this.loadData();
@@ -35,6 +42,7 @@ export default class EmployeeQuestionAnswer extends LightningElement {
     }
 
     processFeedbackData(data) {
+        console.log('Data:', JSON.stringify(data));
         if (data && data.questions) {
             this.feedbackData = {
                 ...data,
@@ -122,12 +130,11 @@ export default class EmployeeQuestionAnswer extends LightningElement {
         .then(() => {
             this.showToast('Success', 'Feedback submitted successfully', 'success');
             
-            // Manually update the feedbackData to show submitted state
-            // This ensures UI updates without waiting for server refresh
+            // CHANGE: Immediately update the UI without waiting for server refresh
             this.updateSubmittedFeedback(answers);
             
-            // Also refresh data from the server
-            this.loadData();
+            // CHANGE: Don't call loadData() as it can override our UI state
+            // this.loadData();
         })
         .catch(error => {
             console.error('Error:', JSON.stringify(error));
@@ -138,7 +145,7 @@ export default class EmployeeQuestionAnswer extends LightningElement {
         });
     }
     
-    // New method to update the UI immediately after submission
+    // Update method to properly set hasSubmitted flag
     updateSubmittedFeedback(answers) {
         // Create a map of questionId to answer for quick lookup
         const answerMap = {};
@@ -154,13 +161,51 @@ export default class EmployeeQuestionAnswer extends LightningElement {
                 hasResponse: true
             }));
             
-            // Update the feedbackData object with the new state
+            // CHANGE: Create a new object to trigger reactivity properly
             this.feedbackData = {
                 ...this.feedbackData,
                 questions: updatedQuestions,
                 hasSubmitted: true
             };
+            
+            // CHANGE: Add logging to verify state change
+            console.log('Updated feedback data after submission:', 
+                JSON.stringify({
+                    hasSubmitted: this.feedbackData.hasSubmitted,
+                    questionCount: this.feedbackData.questions.length
+                })
+            );
         }
+    }
+
+    handleViewSubmissionClick() {
+        console.log('View Submission clicked');
+        
+        // Toggle view submission state
+        this.viewSubmissionButtonClicked = !this.viewSubmissionButtonClicked;
+        
+        // If we're showing submission, hide manager feedback
+        if(this.viewSubmissionButtonClicked) {
+            this.viewManagerFeedbackClicked = false;
+        }
+        
+        console.log('viewSubmissionButtonClicked:', this.viewSubmissionButtonClicked);
+        console.log('isViewingResponses:', this.isViewingResponses);
+    }
+
+    handleViewManagerClick() {
+        console.log('View Manager clicked');
+        
+        // Toggle manager feedback state
+        this.viewManagerFeedbackClicked = !this.viewManagerFeedbackClicked;
+        
+        // If we're showing manager feedback, hide submission
+        if(this.viewManagerFeedbackClicked) {
+            this.viewSubmissionButtonClicked = false;
+        }
+        
+        console.log('viewManagerFeedbackClicked:', this.viewManagerFeedbackClicked);
+        console.log('isViewingResponses:', this.isViewingResponses);
     }
 
     showToast(title, message, variant) {
