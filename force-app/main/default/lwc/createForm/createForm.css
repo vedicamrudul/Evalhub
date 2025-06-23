@@ -1,0 +1,315 @@
+.form-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    min-height: 90vh;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+.content-container {
+    background-color: rgba(255, 255, 255, 0.98);
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    padding: 2.5rem;
+    backdrop-filter: blur(4px);
+}
+
+.section-header {
+    position: relative;
+    padding: 0.75rem 0;
+    margin-bottom: 1.5rem;
+}
+
+.section-header .slds-text-heading_medium {
+    color: #2c3e50;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    font-size: 1.25rem;
+    position: relative;
+    display: inline-block;
+}
+
+.section-header .slds-text-heading_medium::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 0;
+    width: 50px;
+    height: 3px;
+    background: linear-gradient(90deg, #3498db, #2980b9);
+    border-radius: 3px;
+}
+
+.section-divider {
+    background: linear-gradient(90deg, rgba(52, 152, 219, 0.1), rgba(41, 128, 185, 0.3), rgba(52, 152, 219, 0.1));
+    height: 1px;
+    margin-top: 1rem;
+    width: 100%;
+}
+
+.form-field, .question-field {
+    margin-bottom: 1.5rem;
+}
+
+.question-box {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e0e6ed;
+    padding: 2rem;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.03);
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    position: relative;
+    overflow: visible;
+    margin-bottom: 2rem;
+    border-left: 4px solid #3498db;
+    display: block;
+    width: 100%;
+    clear: both;
+    z-index: 1; /* Set base z-index */
+}
+
+.question-box:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+    border-left-color: #2980b9;
+    z-index: 2; /* Increase z-index on hover */
+}
+
+.question-number {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1.25rem;
+    color: #2c3e50;
+    display: inline-block;
+    position: relative;
+    padding-left: 1.75rem;
+}
+
+.button-add-question {
+    z-index: 1; /* Lower than hovered elements but same as normal elements */
+    position: relative;
+    margin-top: 3rem; /* Increased margin to prevent overlap */
+    clear: both;
+    display: block;
+}
+
+.question-number::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1.25rem;
+    height: 1.25rem;
+    background-color: #3498db;
+    border-radius: 4px;
+    opacity: 0.8;
+}
+
+.delete-button {
+    --sds-c-icon-color-foreground-default: #e74c3c;
+    transform: scale(1);
+    transition: all 0.2s ease;
+}
+
+.delete-button:hover {
+    --sds-c-icon-color-foreground-default: #c0392b;
+    transform: scale(1.1);
+}
+
+.add-question-button {
+    --sds-c-button-neutral-color-background: #3498db;
+    --sds-c-button-text-color: white;
+    --sds-c-button-neutral-color-border: transparent;
+    --sds-c-button-neutral-color-background-hover: #2980b9;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    padding: 0 1.5rem;
+    font-weight: 500;
+    box-shadow: 0 2px 5px rgba(52, 152, 219, 0.2);
+    height: 2.75rem;
+}
+
+.add-question-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+}
+
+.submit-button {
+    --sds-c-button-brand-color-background: #2ecc71;
+    --sds-c-button-brand-color-border: transparent;
+    --sds-c-button-text-color: white;
+    padding: 0 3rem;
+    height: 3rem;
+    font-size: 1rem;
+    font-weight: 500;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.submit-button:hover:not(:disabled) {
+    --sds-c-button-brand-color-background: #27ae60;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(46, 204, 113, 0.4);
+}
+
+.submit-button:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: 0.6s;
+}
+
+.submit-button:hover:before {
+    left: 100%;
+}
+
+.success-message {
+    display: flex;
+    align-items: center;
+    background: linear-gradient(145deg, #e8f8f0, #d5f5e3);
+    border-left: 4px solid #2ecc71;
+    border-radius: 8px;
+    padding: 1.25rem;
+    color: #196f3d;
+    box-shadow: 0 4px 12px rgba(46, 204, 113, 0.15);
+    animation: fadeInUp 0.5s ease;
+}
+
+@keyframes fadeInUp {
+    from { 
+        opacity: 0; 
+        transform: translateY(20px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+}
+
+/* Form inputs styling */
+.form-field lightning-input, 
+.question-field lightning-textarea,
+.question-field lightning-combobox {
+    --slds-c-input-color-border: #dfe6ec;
+    --slds-c-input-color-border-focus: #3498db;
+    --slds-c-input-shadow-focus: 0 0 0 3px rgba(52, 152, 219, 0.2);
+    --slds-c-input-radius-border: 6px;
+    --slds-c-input-color-background: #f8f9fa;
+}
+
+/* Add animation for adding questions */
+@keyframes slideIn {
+    from { 
+        opacity: 0; 
+        transform: translateY(20px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+}
+
+.question-box {
+    animation: slideIn 0.4s ease;
+}
+
+/* Card header styling */
+.form-container lightning-card {
+    --slds-c-card-color-border: transparent;
+    --slds-c-card-shadow: none;
+}
+
+.form-container lightning-card .slds-card__header {
+    background: linear-gradient(90deg, #3498db, #2980b9);
+    border-radius: 12px 12px 0 0;
+    padding: 1.25rem 2rem;
+    margin-bottom: 0;
+}
+
+.form-container lightning-card .slds-card__header .slds-text-heading_small {
+    color: white;
+    font-size: 1.4rem;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+}
+
+/* Style for picklist values section - updated with improved z-index */
+.picklist-values-container {
+    z-index: 5;
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1.25rem !important;
+    border-left: 4px solid #3498db;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid #e0e6ed;
+    position: relative;
+    width: 100%;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    display: block;
+    clear: both;
+}
+
+/* Label styling */
+lightning-input label, 
+lightning-textarea label, 
+lightning-combobox label {
+    font-weight: 500;
+    color: #4a5568;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+/* Required field indicator */
+lightning-input[required] label::before,
+lightning-textarea[required] label::before,
+lightning-combobox[required] label::before {
+    content: '* ';
+    color: #e74c3c;
+    font-weight: bold;
+}
+
+/* Add pulse animation to submit button when form is valid */
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.4); }
+    70% { box-shadow: 0 0 0 12px rgba(46, 204, 113, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
+}
+
+.submit-button:not([disabled]) {
+    animation: pulse 2s infinite;
+}
+
+/* Improved combobox dropdown */
+lightning-combobox .slds-combobox__form-element {
+    border-radius: 6px !important;
+    z-index: 100;
+}
+
+/* Better spacing for mobile */
+@media (max-width: 768px) {
+    .form-container {
+        padding: 1rem;
+    }
+    
+    .content-container {
+        padding: 1.5rem;
+    }
+    
+    .question-box {
+        padding: 1.5rem;
+    }
+}

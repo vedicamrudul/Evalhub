@@ -1,0 +1,148 @@
+<template>
+    <div class="form-container">
+        <lightning-card title="Create Feedback Form" icon-name="standard:feedback">
+            <div class="slds-p-around_medium content-container">
+                <!-- Form Details Section -->
+                <div class="section-header slds-m-bottom_medium">
+                    <div class="slds-text-heading_medium slds-m-bottom_x-small">Form Details</div>
+                    <div class="section-divider"></div>
+                </div>
+                
+                <div class="slds-grid slds-gutters slds-wrap">
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-right_medium">
+                        <lightning-input 
+                            label="Form Title" 
+                            name="title" 
+                            required
+                            class="form-field"
+                            value={formDetails.title} 
+                            onchange={handleFormInputChange}>
+                        </lightning-input>
+                    </div>
+                    
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                        <lightning-combobox
+                            label="Department"
+                            name="department"
+                            required
+                            class="form-field"
+                            value={formDetails.department}
+                            options={departmentOptions}
+                            onchange={handleFormInputChange}>
+                        </lightning-combobox>
+                    </div>
+                    
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-top_medium">
+                        <lightning-input 
+                            type="date" 
+                            label="Applicable Month" 
+                            name="applicableMonth" 
+                            required
+                            class="form-field"
+                            value={formDetails.applicableMonth} 
+                            onchange={handleFormInputChange}>
+                        </lightning-input>
+                    </div>
+                </div>
+                
+                <!-- Questions Section -->
+                <div class="section-header slds-m-top_large slds-m-bottom_medium">
+                    <div class="slds-text-heading_medium slds-m-bottom_x-small">Questions</div>
+                    <div class="section-divider"></div>
+                </div>
+                
+                <template for:each={questions} for:item="question" for:index="index">
+                    <div key={question.id} class="question-box slds-m-bottom_medium">
+                        <div class="slds-grid slds-gutters">
+                            <div class="slds-col slds-size_11-of-12">
+                                <div class="question-number">Question {index}</div>
+                            </div>
+                            <div class="slds-col slds-size_1-of-12 slds-text-align_right">
+                                <lightning-button-icon
+                                    icon-name="utility:delete"
+                                    alternative-text="Delete"
+                                    title="Delete"
+                                    class="delete-button"
+                                    variant="border-filled"
+                                    onclick={handleDeleteQuestion}
+                                    data-index={index}>
+                                </lightning-button-icon>
+                            </div>
+                        </div>
+                        
+                        <div class="slds-grid slds-gutters slds-wrap">
+                            <div class="slds-col slds-size_1-of-1">
+                                <lightning-textarea
+                                    label="Question Text"
+                                    name="questionText"
+                                    required
+                                    class="question-field"
+                                    value={question.questionText}
+                                    onchange={handleQuestionChange}
+                                    data-index={index}>
+                                </lightning-textarea>
+                            </div>
+                            
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-top_medium">
+                                <lightning-combobox
+                                    label="Input Type"
+                                    name="inputType"
+                                    required
+                                    class="question-field"
+                                    value={question.inputType}
+                                    options={inputTypeOptions}
+                                    onchange={handleQuestionChange}
+                                    data-index={index}>
+                                </lightning-combobox>
+                            </div>
+                            
+                            <template if:true={question.showPicklistValues}>
+                                <div class="slds-col slds-size_1-of-1 slds-p-top_medium picklist-values-container">
+                                    <lightning-textarea
+                                        label="Picklist Values (comma-separated)"
+                                        name="picklistValues"
+                                        value={question.picklistValues}
+                                        placeholder="Option 1, Option 2, Option 3"
+                                        class="question-field"
+                                        onchange={handleQuestionChange}
+                                        data-index={index}>
+                                    </lightning-textarea>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+                
+                <div class="slds-m-top_medium slds-m-bottom_large button-add-question">
+                    <lightning-button
+                        label="Add Question"
+                        icon-name="utility:add"
+                        variant="neutral"
+                        class="add-question-button"
+                        onclick={handleAddQuestion}>
+                    </lightning-button>
+                </div>
+                
+                <!-- Submit Button -->
+                <div class="slds-text-align_center slds-m-top_large slds-m-bottom_medium">
+                    <lightning-button
+                        variant="brand"
+                        label="Create Form"
+                        title="Create Form"
+                        class="submit-button"
+                        onclick={handleSubmit}
+                        disabled={isSubmitDisabled}>
+                    </lightning-button>
+                </div>
+                
+                <!-- Success Message -->
+                <template if:true={showSuccessMessage}>
+                    <div class="success-message slds-m-top_medium" role="alert">
+                        <lightning-icon icon-name="utility:success" alternative-text="Success" size="small" class="slds-m-right_small"></lightning-icon>
+                        <span>Form created successfully! Form Id: {createdFormId}</span>
+                    </div>
+                </template>
+            </div>
+        </lightning-card>
+    </div>
+</template>
