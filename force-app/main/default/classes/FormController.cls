@@ -30,12 +30,18 @@ public class FeedbackQuestionWrapper {
 @AuraEnabled
 public static String createForm(FeedbackFormWrapper formWrapper, List<FeedbackQuestionWrapper> questionWrappers) {
     // Create the form record
+
     Feedback_Form__c form = new Feedback_Form__c();
     form.Title__c = formWrapper.title;
     form.Department__c = formWrapper.department;
     form.Active_Flag__c = false;
     form.Applicable_Month__c = formWrapper.applicableMonth;
+    try{
     insert form;
+    } catch (DmlException e) {
+        // Handle any errors that occur during the insert operation
+        throw new AuraHandledException('Error creating form: ' + e.getMessage());
+    }
 
     // Create the questions associated with the form
     List<Feedback_Question__c> questions = new List<Feedback_Question__c>();
@@ -49,7 +55,12 @@ public static String createForm(FeedbackFormWrapper formWrapper, List<FeedbackQu
     }
     
     if (!questions.isEmpty()) {
-        insert questions;
+        try{
+            insert questions;
+        }catch (DmlException e) {
+            // Handle any errors that occur during the insert operation
+            throw new AuraHandledException('Error creating questions: ' + e.getMessage());
+        }
     }
 
     return form.Id; // Return the ID of the created form to the frontend so it can be used to associate the question responses with the form

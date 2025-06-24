@@ -14,8 +14,6 @@ public with sharing class QuestionsController {
     @AuraEnabled
     public String employeeId { get; set; } // Must match JS exactly
  }
-
-
  // --------------------------------------------------------------------------------------
    @AuraEnabled(cacheable=true)
    public static Map<String, Object> getFeedbackData() {
@@ -327,7 +325,4 @@ public static List<User> getAllUsers() {
 }
 
 // use the same function - getEmployeeResponseForManager(Id employeeId) to get the feedback for the user for admin.
-
-
-
 }
