@@ -1,0 +1,151 @@
+<template>
+    <lightning-card title="Previous Evaluation Forms">
+        <div class="slds-p-around_medium">
+            <div class="slds-grid slds-gutters slds-m-bottom_medium">
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+                    <lightning-combobox 
+                        label="Filter by Department"
+                        class="filter-control"
+                        placeholder="Select Department"
+                        options={departmentOptionsList}
+                        value={department}
+                        onchange={handleDepartmentChange}>
+                    </lightning-combobox>
+                </div>
+                <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-3">
+                    <lightning-combobox 
+                        label="Filter by Month"
+                        class="filter-control"
+                        placeholder="Select Month"
+                        options={monthOptionsList}
+                        value={selectedMonth}
+                        onchange={handleMonthChange}>
+                    </lightning-combobox>
+                </div>
+                <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-3">
+                    <lightning-combobox 
+                        label="Filter by Year"
+                        class="filter-control"
+                        placeholder="Select Year"
+                        options={yearOptionsList}
+                        value={selectedYear}
+                        onchange={handleYearChange}>
+                    </lightning-combobox>
+                </div>
+            </div>
+            
+            <div class="filter-actions slds-m-bottom_medium">
+                <lightning-button 
+                    label="Apply Filters" 
+                    variant="brand" 
+                    onclick={applyFilters}
+                    class="slds-m-right_small">
+                </lightning-button>
+                <lightning-button 
+                    label="Reset Filters" 
+                    variant="neutral" 
+                    onclick={resetFilters}>
+                </lightning-button>
+            </div>
+            
+            <div class="forms-container">
+                <template if:true={isLoading}>
+                    <div class="slds-is-relative slds-p-around_medium">
+                        <lightning-spinner alternative-text="Loading forms" size="medium"></lightning-spinner>
+                    </div>
+                </template>
+                
+                <template if:false={isLoading}>
+                    <template if:true={hasFilteredForms}>
+                        <template for:each={filteredForms} for:item="form">
+                            <div key={form.Id} class="form-card slds-box slds-m-bottom_small">
+                                <div class="slds-grid slds-wrap">
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12">
+                                        <div class="slds-text-heading_small form-title">{form.Title__c}</div>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12 slds-text-align_right">
+                                        <lightning-button 
+                                            label="View Questions" 
+                                            data-id={form.Id}
+                                            variant="neutral" 
+                                            icon-name="utility:preview" 
+                                            onclick={toggleQuestions}
+                                            class="slds-m-right_small">
+                                        </lightning-button>
+                                        <lightning-button 
+                                            label="View All Responses" 
+                                            data-id={form.Id}
+                                            variant="brand" 
+                                            icon-name="utility:list" 
+                                            onclick={viewResponses}>
+                                        </lightning-button>
+                                    </div>
+                                    <!-- Questions Section - Only visible when toggled -->
+                                    <template if:true={form.showQuestions}>
+                                        <div class="slds-col slds-size_1-of-1 slds-p-around_medium slds-m-top_small slds-m-bottom_small questions-container slds-box slds-theme_shade">
+                                            <h3 class="slds-text-heading_small slds-m-bottom_small">Questions</h3>
+                                            <template if:true={form.isLoadingQuestions}>
+                                                <div class="slds-is-relative slds-p-around_medium">
+                                                    <lightning-spinner alternative-text="Loading questions" size="small"></lightning-spinner>
+                                                </div>
+                                            </template>
+                                            <template if:false={form.isLoadingQuestions}>
+                                                <template if:true={form.questions}>
+                                                    <template if:true={form.questions.length}>
+                                                        <ul class="slds-has-dividers_bottom-space">
+                                                            <template for:each={form.questions} for:item="question" for:index="index">
+                                                                <li key={question.Id} class="slds-item slds-p-around_small">
+                                                                    <div class="slds-grid slds-grid_vertical">
+                                                                        <div class="slds-col">
+                                                                            <span class="slds-text-title_bold">{question.index}. {question.Question_Text__c}</span>
+                                                                        </div>
+                                                                        <div class="slds-col slds-p-top_x-small">
+                                                                            <span class="slds-badge">{question.Input_Type__c}</span>
+                                                                            <template if:true={question.Picklist_Values__c}>
+                                                                                <div class="slds-p-top_xx-small">
+                                                                                    <span class="slds-text-body_small">Options: {question.Picklist_Values__c}</span>
+                                                                                </div>
+                                                                            </template>
+                                                                        </div>
+                                                                    </div>
+                                                                </li>
+                                                            </template>
+                                                        </ul>
+                                                    </template>
+                                                    <template if:false={form.questions.length}>
+                                                        <div class="slds-text-align_center slds-p-around_medium">
+                                                            <p>No questions found for this form.</p>
+                                                        </div>
+                                                    </template>
+                                                </template>
+                                            </template>
+                                        </div>
+                                    </template>
+                                    <!-- End of Questions Section -->
+                                    <div class="slds-col slds-size_1-of-2 slds-medium-size_3-of-12">
+                                        <div class="slds-text-title form-label">Date:</div>
+                                        <div>
+                                            <span class="month-display">{form._monthName}</span>
+                                            <span class="year-display">{form._year}</span>
+                                        </div>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2 slds-medium-size_3-of-12">
+                                        <div class="slds-text-title form-label">Department:</div>
+                                        <div>{form.department__c}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </template>
+                    
+                    <template if:false={hasFilteredForms}>
+                        <div class="slds-text-align_center slds-p-around_medium empty-state">
+                            <lightning-icon icon-name="utility:filterList" size="medium" class="slds-m-bottom_small"></lightning-icon>
+                            <p>{noFormsMessage}</p>
+                        </div>
+                    </template>
+                </template>
+            </div>
+        </div>
+    </lightning-card>
+</template>

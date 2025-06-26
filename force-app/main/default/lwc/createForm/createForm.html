@@ -15,8 +15,9 @@
                             name="title" 
                             required
                             class="form-field"
-                            value={formDetails.title} 
-                            onchange={handleFormInputChange}>
+                            value={formDetails.title}
+                            readonly
+                            disabled="false">
                         </lightning-input>
                     </div>
                     
@@ -33,15 +34,21 @@
                     </div>
                     
                     <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-top_medium">
-                        <lightning-input 
-                            type="date" 
-                            label="Applicable Month" 
-                            name="applicableMonth" 
-                            required
-                            class="form-field"
-                            value={formDetails.applicableMonth} 
-                            onchange={handleFormInputChange}>
-                        </lightning-input>
+                        <div class="slds-form-element">
+                            <label class="slds-form-element__label" for="month-input">
+                                <abbr class="slds-required" title="required">*</abbr>Applicable Month
+                            </label>
+                            <div class="slds-form-element__control">
+                                <input type="month" 
+                                    id="month-input"
+                                    class="slds-input form-field" 
+                                    name="applicableMonthInput" 
+                                    required
+                                    value={formDetails.applicableMonthInput} 
+                                    onchange={handleMonthYearChange} />
+                            </div>
+                            <div class="slds-form-element__help" id="month-input-help">Format: MM-YYYY</div>
+                        </div>
                     </div>
                 </div>
                 
@@ -55,7 +62,7 @@
                     <div key={question.id} class="question-box slds-m-bottom_medium">
                         <div class="slds-grid slds-gutters">
                             <div class="slds-col slds-size_11-of-12">
-                                <div class="question-number">Question {index}</div>
+                                <div class="question-number">Question {question.displayNumber}</div>
                             </div>
                             <div class="slds-col slds-size_1-of-12 slds-text-align_right">
                                 <lightning-button-icon

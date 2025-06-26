@@ -6,7 +6,8 @@ export default class CreateForm extends LightningElement {
     @track formDetails = {
         title: '',
         department: '',
-        applicableMonth: null
+        applicableMonth: null,
+        applicableMonthInput: null
     };
     
     @track questions = [];
@@ -34,6 +35,58 @@ export default class CreateForm extends LightningElement {
         const field = event.target.name;
         const value = event.target.value;
         this.formDetails = { ...this.formDetails, [field]: value };
+        
+        // If department changes, update the title if month is already selected
+        if (field === 'department' && this.formDetails.applicableMonthInput) {
+            this.generateTitle(value, this.formDetails.applicableMonthInput);
+        }
+    }
+    
+    handleMonthYearChange(event) {
+        // Get the month-year value (format: YYYY-MM)
+        const monthYearValue = event.target.value;
+        
+        if (monthYearValue) {
+            // Store the input value
+            this.formDetails.applicableMonthInput = monthYearValue;
+            
+            // Split the value to get year and month
+            const [year, month] = monthYearValue.split('-');
+            
+            // Create a date string with the 1st day of the selected month
+            // Format: YYYY-MM-DD (required by Salesforce)
+            const formattedDate = `${year}-${month}-01`;
+            
+            // Update the applicableMonth field with the formatted date
+            this.formDetails.applicableMonth = formattedDate;
+            
+            // Generate title if department is already selected
+            if (this.formDetails.department) {
+                this.generateTitle(this.formDetails.department, monthYearValue);
+            }
+        } else {
+            // If input is cleared
+            this.formDetails.applicableMonthInput = null;
+            this.formDetails.applicableMonth = null;
+            this.formDetails.title = '';
+        }
+    }
+    
+    generateTitle(department, monthYearValue) {
+        if (!department || !monthYearValue) return;
+        
+        // Split the monthYearValue to get year and month number
+        const [year, monthNum] = monthYearValue.split('-');
+        
+        // Convert month number to month name
+        const monthNames = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+        const monthName = monthNames[parseInt(monthNum) - 1];
+        
+        // Generate title in format: "Department Feedback Month Year"
+        this.formDetails.title = `${department} Feedback ${monthName} ${year}`;
     }
     
     handleQuestionChange(event) {
@@ -56,18 +109,24 @@ export default class CreateForm extends LightningElement {
     
     handleAddQuestion() {
         const newId = Date.now().toString();
+        const newQuestionNumber = this.questions.length + 1;
         this.questions.push({
             id: newId,
             questionText: '',
             inputType: 'Text',
             picklistValues: '',
-            showPicklistValues: false
+            showPicklistValues: false,
+            displayNumber: newQuestionNumber
         });
     }
     
     handleDeleteQuestion(event) {
         const index = event.target.dataset.index;
-        this.questions = this.questions.filter((_, i) => i !== parseInt(index));
+        this.questions = this.questions.filter((_, i) => i !== parseInt(index))
+            .map((question, i) => {
+                // Update the displayNumber to maintain sequential numbering
+                return { ...question, displayNumber: i + 1 };
+            });
     }
     
     get isSubmitDisabled() {
@@ -117,10 +176,17 @@ export default class CreateForm extends LightningElement {
             })
             .catch(error => {
                 console.error('Error creating form:', error);
+                
+                // Check if it's the duplicate form error
+                const errorMsg = error.body && error.body.message || 'Unknown error';
+                const isDuplicateFormError = errorMsg.includes('A form already exists for this department and month');
+                
                 this.dispatchEvent(
                     new ShowToastEvent({
-                        title: 'Error creating form',
-                        message: error.body ? error.body.message : 'Unknown error',
+                        title: 'Error',
+                        message: isDuplicateFormError ? 
+                            'A form already exists for this department and month' : 
+                            errorMsg,
                         variant: 'error'
                     })
                 );
@@ -131,7 +197,8 @@ export default class CreateForm extends LightningElement {
         this.formDetails = {
             title: '',
             department: '',
-            applicableMonth: null
+            applicableMonth: null,
+            applicableMonthInput: null
         };
         
         this.questions = [{
@@ -139,7 +206,8 @@ export default class CreateForm extends LightningElement {
             questionText: '',
             inputType: 'Text',
             picklistValues: '',
-            showPicklistValues: false
+            showPicklistValues: false,
+            displayNumber: 1
         }];
         
         // Hide success message after 5 seconds

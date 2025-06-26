@@ -15,6 +15,9 @@ public with sharing class QuestionsController {
     public String employeeId { get; set; } // Must match JS exactly
  }
  // --------------------------------------------------------------------------------------
+
+//  BELOW IS FUNCTION TO GET FEEDBACK DATA FOR EMPLOYEE/EXECUTIVE
+//  --------------------------------------------------------------------------------------
    @AuraEnabled(cacheable=true)
    public static Map<String, Object> getFeedbackData() {
     // Get current user
@@ -106,6 +109,9 @@ public with sharing class QuestionsController {
 // form data for admin to upload
 
 
+// ----------------------------------------------------------------------------------------
+// FUNTCTION TO GET EMPLOYEE FEEDBACK RESPONSE FOR MANAGER
+// ----------------------------------------------------------------------------------------
 @AuraEnabled(cacheable=true)
 public static Map<String, Object> getEmployeeResponseForManager(Id employeeId){
     // Get current user
@@ -223,7 +229,10 @@ public static Map<String, Object> getEmployeeResponseForManager(Id employeeId){
 
 }
 
-// function to submit manager response.
+
+// --------------------------------------------------------------------------------------
+// FUNCTIONS FOR MANAGER TO SUBMIT RESPONSE
+// --------------------------------------------------------------------------------------
 @AuraEnabled
 public static String submitManagerResponse(ManagerResponse response) {
     // lets first get the user id thats active for responder
@@ -266,7 +275,9 @@ public static String submitManagerResponse(ManagerResponse response) {
 
 }
 
-    //function to submit feedback response By executive or employee
+//  --------------------------------------------------------------------------------------
+// FUNCTION TO SUBMIT FEEDBACK RESPONSE BY EMPLOYEE OR EXECUTIVE
+//  --------------------------------------------------------------------------------------
     @AuraEnabled
     public static String submitFeedback(List<QuestionAnswerPair> answers, Id respondentId) {
 
@@ -302,27 +313,6 @@ public static String submitManagerResponse(ManagerResponse response) {
               return 'Error submitting feedback: ' + e.getMessage();
             }
     }
-
-    // --------------------------------------------------------------------------------------
-    // Lets do for admin.
-    // we have to get all users (literally all users) except the system admin and display their names and details.
-    // when admin clicks on a user, we will show the feedback for that user (their response) and also get the manager response for that user- by using active form and manager repsonse.
-@AuraEnabled(cacheable=true)
-public static List<User> getAllUsers() {
-    // Get all (otherwise active but since here we cannot keep more than one active user lets not do that) users except system admin
-    List<User> users = [
-        SELECT Id, Name, Email, department__c
-        FROM User
-        WHERE Profile.Name != 'System Administrator'
-        AND department__c != null
-        ORDER BY Name
-    ];
-    if (users.isEmpty()) {
-        throw new AuraHandledException('No users found.');
-    }
-    return users;
-   
-}
 
 // use the same function - getEmployeeResponseForManager(Id employeeId) to get the feedback for the user for admin.
 }

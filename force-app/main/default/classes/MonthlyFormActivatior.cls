@@ -48,3 +48,26 @@ global class MonthlyFormActivatior implements Schedulable {
         }
     }
 }
+
+/*
+
+2. Schedule It from Developer Console Once
+Go to Developer Console → Debug → Open Execute Anonymous Window, then run:
+
+
+String cronExp = '0 0 0 1 * ?'; // Midnight on the 1st of every month
+System.schedule('Monthly Form Activator', cronExp, new MonthlyFormActivator());
+
+⏰ Cron Explanation
+0 0 0 1 * ? means:
+
+0 0 0 = 12:00 AM
+
+1 = day of month (1st)
+
+* = every month
+
+? = ignore day-of-week
+
+
+*/
