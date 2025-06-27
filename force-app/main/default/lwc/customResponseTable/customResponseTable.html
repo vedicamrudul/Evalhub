@@ -1,0 +1,32 @@
+<template>
+    <template if:true={loading}>
+        <lightning-card>
+            <div class="slds-p-around_medium slds-text-align_center">
+                <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+                <p>Loading...</p>
+            </div>
+        </lightning-card>
+    </template>
+
+    <template if:false={loading}>
+        <template if:true={hasResponses}>
+            <lightning-card title="Feedback Responses" icon-name="standard:feedback">
+                <div class="slds-p-around_medium">
+                    <template for:each={feedbackResponses} for:item="response">
+                        <div key={response.id} class="slds-m-bottom_small">
+                            <p><strong>{response.questionText}</strong></p>
+                            <p>{response.answer}</p>
+                        </div>
+                    </template>
+                </div>
+            </lightning-card>
+        </template>
+
+        <template if:false={hasResponses}>
+            <lightning-card title="No Feedback Responses Found" icon-name="utility:info">
+                <div class="slds-p-around_medium slds-text-align_center">
+                    <p>No feedback responses available for this employee.</p>
+                </div>
+            </lightning-card>
+        </template>
+    </template>

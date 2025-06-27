@@ -1,0 +1,194 @@
+/* Stats Section */
+.stats-container {
+    margin-bottom: 1rem;
+}
+
+.stats-box {
+    padding: 0.5rem 0.75rem;
+    background-color: #f7f7f7;
+    border-radius: 0.25rem;
+    border: 1px solid #e5e5e5;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.stats-title {
+    font-size: 0.875rem;
+    color: #444;
+    margin-bottom: 0.25rem;
+}
+
+.stats-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #032d60;
+}
+
+.stats-reviewed {
+    background-color: #eaf5ef;
+    border-color: #c9e6d7;
+}
+
+.stats-submitted {
+    background-color: #f8f6e3;
+    border-color: #e8e4c0;
+}
+
+.stats-pending {
+    background-color: #fdf0ed;
+    border-color: #f0d4cd;
+}
+
+/* User Card Styles */
+.user-card {
+    border: 1px solid #e5e5e5;
+    border-radius: 0.25rem;
+    background-color: #ffffff;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+    position: relative;
+}
+
+.user-card:hover {
+    box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+}
+
+.user-card .user-name {
+    font-weight: 700;
+    color: #032d60;
+    margin-bottom: 0.25rem;
+}
+
+.user-card .slds-badge {
+    margin-right: 0.5rem;
+    background-color: #f3f2f2;
+    color: #444444;
+    font-weight: 400;
+    padding: 0.25rem 0.5rem;
+}
+
+.user-card .user-department {
+    background-color: #e8f4fb;
+    color: #16325c;
+}
+
+.user-card .user-role {
+    background-color: #f8e6ad;
+    color: #514f39;
+}
+
+.card-footer {
+    margin-top: 0.75rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #f3f2f2;
+}
+
+.manager-feedback {
+    background-color: #f5f5f5;
+    border: 1px solid #e0e0e0;
+    border-left: 3px solid #006eb3;
+    color: #444;
+}
+
+/* Status Indicators */
+.status-indicator {
+    display: flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.8125rem;
+    white-space: nowrap;
+}
+
+.status-indicator[data-status="true"] {
+    background-color: #eaf5ef;
+    color: #2e844a;
+}
+
+.status-indicator[data-submitted="true"][data-status="false"] {
+    background-color: #f8f6e3;
+    color: #6f4400;
+}
+
+.status-indicator[data-submitted="false"][data-status="false"] {
+    background-color: #fdf0ed;
+    color: #c23934;
+}
+
+/* Status Legend */
+.status-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 0.5rem;
+    background-color: #f7f7f7;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+}
+
+.status-legend-item {
+    display: flex;
+    align-items: center;
+    font-size: 0.75rem;
+    color: #444;
+}
+
+.status-legend .status-indicator {
+    width: 1.5rem;
+    height: 1.5rem;
+    justify-content: center;
+    padding: 0;
+}
+
+.status-legend .status-reviewed {
+    background-color: #eaf5ef;
+    color: #2e844a;
+}
+
+.status-legend .status-submitted {
+    background-color: #f8f6e3;
+    color: #6f4400;
+}
+
+.status-legend .status-pending {
+    background-color: #fdf0ed;
+    color: #c23934;
+}
+
+/* Response and Question Styles */
+.question-text {
+    font-weight: 600;
+    color: #444;
+}
+
+.response-box {
+    background-color: #f8f8f8;
+    border: 1px solid #eaeaea;
+    border-radius: 4px;
+    color: #333;
+}
+
+/* Response Cards Container */
+.response-cards-container {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 0.75rem;
+}
+
+/* Responsive Layout */
+@media (min-width: 768px) {
+    .response-cards-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1024px) {
+    .response-cards-container {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}

@@ -315,4 +315,135 @@ public static String submitManagerResponse(ManagerResponse response) {
     }
 
 // use the same function - getEmployeeResponseForManager(Id employeeId) to get the feedback for the user for admin.
+
+// function to get the questions for the form and the response for all users other than admin with user information like name and department and role for admin
+@AuraEnabled(cacheable=true)
+public static Map<String, Object> getAllUserResponsesForAdmin(Id formId) {
+    // Get current admin user
+    User currentUser = UserController.getCurrentUser();
+    if (currentUser == null) {
+        throw new AuraHandledException('User not found');
+    }
+
+    // Get the form details
+    Feedback_Form__c form = [
+        SELECT Id, Name, Department__c 
+        FROM Feedback_Form__c 
+        WHERE Id = :formId
+        LIMIT 1
+    ];
+
+    if (form == null) {
+        throw new AuraHandledException('Form not found');
+    }
+
+    // Get all questions for this form
+    List<Feedback_Question__c> questions = [
+        SELECT Id, Question_Text__c, Input_Type__c, Picklist_Values__c
+        FROM Feedback_Question__c
+        WHERE Feedback_Form__c = :formId
+        ORDER BY CreatedDate
+    ];
+
+    // Get all users except admin (including inactive)
+    List<User> allUsers = [
+        SELECT Id, Name, Department, UserRole.Name, IsActive
+        FROM User
+        WHERE Id != :currentUser.Id
+        ORDER BY Name
+    ];
+
+    // Get all responses for these questions from all users
+    List<Feedback_Response__c> allResponses = [
+        SELECT Id, Question_Lookup__c, Rating_Answer__c, 
+               Responder__c, Responder__r.Name, Respondent__c, Respondent__r.Name
+        FROM Feedback_Response__c
+        WHERE Question_Lookup__c IN :questions
+        AND Respondent__c IN :allUsers
+        ORDER BY Respondent__r.Name, Question_Lookup__c
+    ];
+
+    // Get all manager responses for these users
+    List<Manager_Response__c> managerResponses = [
+        SELECT Id, Manager_Response_Test__c, User_Lookup__c, User_Lookup__r.Name
+        FROM Manager_Response__c
+        WHERE User_Lookup__c IN :allUsers
+        AND Feedback_Form_Lookup__c = :formId
+    ];
+
+    // Organize data for response
+    Map<String, Object> result = new Map<String, Object>();
+    
+    // 1. Prepare questions structure
+    List<Map<String, String>> questionList = new List<Map<String, String>>();
+    for (Feedback_Question__c q : questions) {
+        questionList.add(new Map<String, String>{
+            'id' => q.Id,
+            'text' => q.Question_Text__c,
+            'type' => q.Input_Type__c,
+            'picklistValues' => q.Picklist_Values__c
+        });
+    }
+    result.put('questions', questionList);
+    result.put('formName', form.Name);
+    result.put('formDepartment', form.Department__c);
+
+    // 2. Prepare user responses structure
+    List<Map<String, Object>> userResponses = new List<Map<String, Object>>();
+    
+    // Create map for quick lookup of responses by user and question
+    Map<Id, Map<Id, String>> userQuestionResponseMap = new Map<Id, Map<Id, String>>();
+    for (Feedback_Response__c res : allResponses) {
+        if (!userQuestionResponseMap.containsKey(res.Respondent__c)) {
+            userQuestionResponseMap.put(res.Respondent__c, new Map<Id, String>());
+        }
+        userQuestionResponseMap.get(res.Respondent__c).put(res.Question_Lookup__c, res.Rating_Answer__c);
+    }
+
+    // Create map for manager responses by user
+    Map<Id, String> managerResponseMap = new Map<Id, String>();
+    for (Manager_Response__c mr : managerResponses) {
+        managerResponseMap.put(mr.User_Lookup__c, mr.Manager_Response_Test__c);
+    }
+
+    // Build final user response structure
+    for (User u : allUsers) {
+        Map<String, Object> userData = new Map<String, Object>{
+            'userId' => u.Id,
+            'userName' => u.Name,
+            'department' => u.Department,
+            'role' => u.UserRole?.Name,
+            'isActive' => u.IsActive,
+            'managerResponse' => managerResponseMap.containsKey(u.Id) ? managerResponseMap.get(u.Id) : null,
+            'hasManagerResponse' => managerResponseMap.containsKey(u.Id)
+        };
+
+        // Add responses for each question
+        List<Map<String, String>> questionResponses = new List<Map<String, String>>();
+        for (Feedback_Question__c q : questions) {
+            String answer = '';
+            Boolean hasResponse = false;
+            
+            if (userQuestionResponseMap.containsKey(u.Id) && 
+                userQuestionResponseMap.get(u.Id).containsKey(q.Id)) {
+                answer = userQuestionResponseMap.get(u.Id).get(q.Id);
+                hasResponse = true;
+            }
+            
+            questionResponses.add(new Map<String, String>{
+                'questionId' => q.Id,
+                'answer' => answer,
+                'hasResponse' => String.valueOf(hasResponse)
+            });
+        }
+        
+        userData.put('questionResponses', questionResponses);
+        userData.put('hasSubmitted', userQuestionResponseMap.containsKey(u.Id));
+        userResponses.add(userData);
+    }
+
+    result.put('userResponses', userResponses);
+    return result;
+}
+                    
 }

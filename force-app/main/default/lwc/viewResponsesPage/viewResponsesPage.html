@@ -1,0 +1,207 @@
+<template>
+    <lightning-card icon-name="standard:feedback" title="Response Dashboard">
+        <div class="slds-p-around_medium">
+            <!-- Loading spinner -->
+            <template if:true={isLoading}>
+                <div class="slds-is-relative slds-p-around_medium">
+                    <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+                </div>
+            </template>
+            
+            <!-- Error message -->
+            <template if:true={error}>
+                <div class="slds-notify slds-notify_alert slds-alert_error" role="alert">
+                    <span class="slds-assistive-text">Error</span>
+                    <h2>{error}</h2>
+                    <div class="slds-notify__close">
+                        <lightning-button-icon icon-name="utility:close" variant="bare" onclick={clearError}></lightning-button-icon>
+                    </div>
+                </div>
+                <!-- Add a back button when form ID is missing -->
+                <template if:false={formId}>
+                    <div class="slds-p-around_medium slds-text-align_center">
+                        <lightning-button label="Go Back to Forms" icon-name="utility:back" 
+                                          variant="brand" onclick={navigateBack}></lightning-button>
+                    </div>
+                </template>
+            </template>
+            
+            <!-- Form data header -->
+            <template if:true={hasFormData}>
+                <div class="slds-grid slds-gutters slds-m-bottom_medium">
+                    <div class="slds-col slds-size_2-of-3">
+                        <div class="slds-text-heading_medium slds-m-bottom_x-small">{formName}</div>
+                        <div class="slds-text-body_small">Department: {formDepartment}</div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-3 slds-text-align_right">
+                        <lightning-button-group>
+                            <lightning-button label="Back" icon-name="utility:back" onclick={navigateBack}></lightning-button>
+                            <lightning-button label="Refresh" icon-name="utility:refresh" onclick={refreshData}></lightning-button>
+                        </lightning-button-group>
+                    </div>
+                </div>
+                
+                <!-- Stats section -->
+                <div class="slds-grid slds-gutters slds-m-bottom_medium slds-wrap stats-container">
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-p-around_xx-small">
+                        <div class="slds-box slds-box_xx-small slds-theme_shade stats-box">
+                            <div class="slds-text-heading_small slds-truncate stats-title">Total Users</div>
+                            <div class="slds-text-heading_medium stats-value">{statusCounts.total}</div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-p-around_xx-small">
+                        <div class="slds-box slds-box_xx-small stats-box stats-reviewed">
+                            <div class="slds-text-heading_small slds-truncate stats-title">Reviewed</div>
+                            <div class="slds-text-heading_medium stats-value">{statusCounts.reviewed}</div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-p-around_xx-small">
+                        <div class="slds-box slds-box_xx-small stats-box stats-submitted">
+                            <div class="slds-text-heading_small slds-truncate stats-title">Submitted</div>
+                            <div class="slds-text-heading_medium stats-value">{statusCounts.submitted}</div>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-4 slds-p-around_xx-small">
+                        <div class="slds-box slds-box_xx-small stats-box stats-pending">
+                            <div class="slds-text-heading_small slds-truncate stats-title">Pending</div>
+                            <div class="slds-text-heading_medium stats-value">{statusCounts.pending}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Filters section -->
+                <div class="slds-grid slds-gutters slds-m-bottom_medium">
+                    <div class="slds-col slds-size_2-of-3">
+                        <lightning-input type="search" 
+                                         label="Search Users" 
+                                         value={searchTerm} 
+                                         onchange={handleSearchChange}
+                                         class="slds-m-bottom_small"></lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-3">
+                        <lightning-radio-group name="viewOptions"
+                                           label="Filter By Status"
+                                           options={viewOptions}
+                                           value={viewOption}
+                                           type="button"
+                                           onchange={handleViewOptionChange}></lightning-radio-group>
+                    </div>
+                </div>
+                
+                <!-- Status legend -->
+                <div class="status-legend slds-m-bottom_medium">
+                    <div class="status-legend-item">
+                        <span class="status-indicator status-reviewed slds-m-right_x-small">✓</span>
+                        <span>Reviewed by Manager</span>
+                    </div>
+                    <div class="status-legend-item">
+                        <span class="status-indicator status-submitted slds-m-right_x-small">!</span>
+                        <span>Submitted, Not Reviewed</span>
+                    </div>
+                    <div class="status-legend-item">
+                        <span class="status-indicator status-pending slds-m-right_x-small">x</span>
+                        <span>Not Submitted</span>
+                    </div>
+                </div>
+                
+                <!-- User cards -->
+                <template if:true={hasFilteredUsers}>
+                    <div class="response-cards-container">
+                        <template for:each={filteredUserResponses} for:item="user">
+                            <div key={user.userId} class="user-card" data-user-id={user.userId} onclick={handleUserClick}>
+                                <div class="slds-grid slds-gutters">
+                                    <div class="slds-col slds-size_3-of-4">
+                                        <div class="user-name">{user.userName}</div>
+                                        <div class="slds-m-top_xx-small">
+                                            <span class="slds-badge user-department">{user.department}</span>
+                                            <span class="slds-badge user-role">{user.role}</span>
+                                            <template if:false={user.isActive}>
+                                                <span class="slds-badge slds-theme_error">Inactive</span>
+                                            </template>
+                                        </div>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-4 slds-text-align_right">
+                                        <div class="status-indicator" 
+                                             data-status={user.hasManagerResponse}
+                                             data-submitted={user.hasSubmitted}>
+                                            <template if:true={user.hasManagerResponse}>
+                                                ✓
+                                            </template>
+                                            <template if:false={user.hasManagerResponse}>
+                                                <template if:true={user.hasSubmitted}>
+                                                    !
+                                                </template>
+                                                <template if:false={user.hasSubmitted}>
+                                                    x
+                                                </template>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- User details section -->
+                                <template if:true={user.isSelected}>
+                                    <div class="slds-m-top_medium">
+                                        <template if:true={user.hasSubmitted}>
+                                            <div class="slds-text-heading_small slds-m-bottom_small">Responses</div>
+                                            <template for:each={questions} for:item="question">
+                                                <div key={question.id} class="slds-m-bottom_medium">
+                                                    <div class="slds-text-body_regular slds-m-bottom_xx-small question-text">{question.text}</div>
+                                                    <template for:each={user.questionResponses} for:item="response">
+                                                        <template if:true={response.isAnswered}>
+                                                            <template if:true={response.questionId}>
+                                                                <div if:true={response.answer} key={response.questionId} class="slds-box slds-box_xx-small slds-theme_shade slds-m-top_x-small response-box">
+                                                                    <div class="slds-text-body_regular">{response.answer}</div>
+                                                                </div>
+                                                            </template>
+                                                        </template>
+                                                    </template>
+                                                </div>
+                                            </template>
+                                            
+                                            <!-- Manager's response -->
+                                            <template if:true={user.hasManagerResponse}>
+                                                <div class="slds-m-top_medium">
+                                                    <div class="slds-text-heading_small slds-m-bottom_small">Manager's Feedback</div>
+                                                    <div class="slds-box slds-p-around_small manager-feedback">
+                                                        {user.managerResponse}
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </template>
+                                        <template if:false={user.hasSubmitted}>
+                                            <div class="slds-text-body_regular slds-text-color_weak">
+                                                User has not submitted any responses yet.
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+                
+                <template if:false={hasFilteredUsers}>
+                    <div class="slds-illustration slds-illustration_small">
+                        <div class="slds-text-longform">
+                            <h3 class="slds-text-heading_medium">No results found</h3>
+                            <p class="slds-text-body_regular">Try adjusting your search or filter criteria.</p>
+                        </div>
+                    </div>
+                </template>
+            </template>
+            
+            <template if:false={hasFormData}>
+                <div class="slds-illustration slds-illustration_small" style="margin-top: 4rem;">
+                    <div class="slds-text-longform slds-text-align_center">
+                        <h3 class="slds-text-heading_medium">No Form Selected</h3>
+                        <p class="slds-text-body_regular">Please select a form to view responses.</p>
+                        <div class="slds-m-top_medium">
+                            <lightning-button variant="brand" label="Go to Forms" onclick={navigateBack}></lightning-button>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </lightning-card>
+</template>
