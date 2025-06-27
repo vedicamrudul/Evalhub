@@ -148,11 +148,11 @@ export default class ViewPreviousFormAdmin extends NavigationMixin(LightningElem
         const formId = event.currentTarget.dataset.id;
         console.log('Navigating to ViewResponsesPage with formId:', formId);
         
-        // Navigate to the view responses page
+        // Navigate to the view responses page with formId as a parameter
         this[NavigationMixin.Navigate]({
-            type: 'standard__component',
+            type: 'standard__navItemPage',
             attributes: {
-                componentName: 'c__ViewResponsesPage'
+                apiName: 'view_responses'
             },
             state: {
                 c__formId: formId

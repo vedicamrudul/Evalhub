@@ -120,6 +120,33 @@
     color: #c23934;
 }
 
+/* Table Status Indicators */
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem 0.5rem;
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.status-pill-reviewed {
+    background-color: #eaf5ef;
+    color: #2e844a;
+}
+
+.status-pill-submitted {
+    background-color: #f8f6e3;
+    color: #6f4400;
+}
+
+.status-pill-pending {
+    background-color: #fdf0ed;
+    color: #c23934;
+}
+
 /* Status Legend */
 .status-legend {
     display: flex;
@@ -173,22 +200,128 @@
     color: #333;
 }
 
-/* Response Cards Container */
-.response-cards-container {
-    display: grid;
-    grid-template-columns: repeat(1, 1fr);
-    gap: 0.75rem;
+/* Custom Data Table Structure */
+.custom-table-container {
+    overflow-x: auto;
+    margin-bottom: 2rem;
+    background-color: #ffffff;
+    border-radius: 0.25rem;
+    border: 1px solid #e5e5e5;
 }
 
-/* Responsive Layout */
-@media (min-width: 768px) {
-    .response-cards-container {
-        grid-template-columns: repeat(2, 1fr);
-    }
+.custom-table {
+    width: 100%;
+    min-width: 800px;
+    border-collapse: collapse;
 }
 
-@media (min-width: 1024px) {
-    .response-cards-container {
-        grid-template-columns: repeat(3, 1fr);
+.custom-table-header {
+    position: sticky;
+    top: 0;
+    background-color: #f7f7f7;
+    z-index: 1;
+    border-bottom: 2px solid #dddbda;
+}
+
+.custom-table-header th {
+    padding: 0.75rem;
+    text-align: left;
+    font-weight: 700;
+    color: #032d60;
+    white-space: nowrap;
+    position: relative;
+}
+
+.custom-table-header th.user-info-col {
+    background-color: #f3f3f3;
+    position: sticky;
+    left: 0;
+    z-index: 2;
+}
+
+.custom-table-header th.question-col {
+    min-width: 180px;
+    max-width: 300px;
+    font-size: 0.875rem;
+}
+
+.custom-table-row {
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.custom-table-row:hover {
+    background-color: #f8f8ff;
+}
+
+.custom-table-row td {
+    padding: 0.75rem;
+    vertical-align: top;
+    border-right: 1px solid #f0f0f0;
+}
+
+.custom-table-row td.user-info-col {
+    background-color: #f8f8f8;
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    min-width: 200px;
+}
+
+.user-info-cell {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-name-cell {
+    font-weight: 700;
+    color: #032d60;
+    margin-bottom: 0.25rem;
+}
+
+.user-badge-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin-bottom: 0.25rem;
+}
+
+.answer-cell {
+    min-width: 180px;
+    max-width: 300px;
+    word-break: break-word;
+}
+
+.answer-text {
+    white-space: pre-line;
+    line-height: 1.5;
+}
+
+.no-answer {
+    font-style: italic;
+    color: #706e6b;
+}
+
+.status-cell {
+    width: 120px;
+    text-align: center;
+}
+
+/* Alternating Row Colors */
+.custom-table-row:nth-child(even) {
+    background-color: #fafafa;
+}
+.custom-table-row:nth-child(even):hover {
+    background-color: #f8f8ff;
+}
+.custom-table-row:nth-child(even) td.user-info-col {
+    background-color: #f2f2f2;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .custom-table-container {
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
     }
 }

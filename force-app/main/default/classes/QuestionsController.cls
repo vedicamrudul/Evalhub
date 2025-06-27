@@ -345,12 +345,15 @@ public static Map<String, Object> getAllUserResponsesForAdmin(Id formId) {
         ORDER BY CreatedDate
     ];
 
-    // Get all users except admin (including inactive)
+    // Get only custom users (not Salesforce system users) except admin
+    // Filter for users in the same department as the form, if form has a department
+    String formDepartment = form.Department__c;
+    
     List<User> allUsers = [
         SELECT Id, Name, Department, UserRole.Name, IsActive
         FROM User
         WHERE Id != :currentUser.Id
-        ORDER BY Name
+       AND department__c = :formDepartment
     ];
 
     // Get all responses for these questions from all users
@@ -408,6 +411,11 @@ public static Map<String, Object> getAllUserResponsesForAdmin(Id formId) {
 
     // Build final user response structure
     for (User u : allUsers) {
+        // Skip system users or users without proper data
+        if (u.Department == null || u.Name == null || u.Name.contains('Automated Process') || u.Name.contains('Integration User')) {
+            continue;
+        }
+        
         Map<String, Object> userData = new Map<String, Object>{
             'userId' => u.Id,
             'userName' => u.Name,
@@ -443,6 +451,7 @@ public static Map<String, Object> getAllUserResponsesForAdmin(Id formId) {
     }
 
     result.put('userResponses', userResponses);
+    System.debug('Returning ' + userResponses.size() + ' custom users out of ' + allUsers.size() + ' total users for form: ' + form.Name);
     return result;
 }
                     
