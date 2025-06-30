@@ -350,7 +350,7 @@ public static Map<String, Object> getAllUserResponsesForAdmin(Id formId) {
     String formDepartment = form.Department__c;
     
     List<User> allUsers = [
-        SELECT Id, Name, Department, UserRole.Name
+        SELECT Id, Name, Department, UserRole.Name, IsActive, Profile.Name, CreatedDate
         FROM User
         WHERE Id != :currentUser.Id
        AND department__c = :formDepartment
@@ -421,6 +421,8 @@ public static Map<String, Object> getAllUserResponsesForAdmin(Id formId) {
             'userName' => u.Name,
             'department' => u.Department,
             'role' => u.UserRole?.Name,
+            'profile' => u.Profile?.Name,
+            'isActive' => u.IsActive,
             'managerResponse' => managerResponseMap.containsKey(u.Id) ? managerResponseMap.get(u.Id) : null,
             'hasManagerResponse' => managerResponseMap.containsKey(u.Id)
         };
@@ -450,8 +452,148 @@ public static Map<String, Object> getAllUserResponsesForAdmin(Id formId) {
     }
 
     result.put('userResponses', userResponses);
+    
+    // 3. Calculate analytics data
+    Map<String, Object> analytics = calculateAnalytics(userResponses, questions);
+    result.put('analytics', analytics);
+    
     System.debug('Returning ' + userResponses.size() + ' custom users out of ' + allUsers.size() + ' total users for form: ' + form.Name);
     return result;
+}
+
+// Helper method to calculate analytics data
+private static Map<String, Object> calculateAnalytics(List<Map<String, Object>> userResponses, List<Feedback_Question__c> questions) {
+    Map<String, Object> analytics = new Map<String, Object>();
+    
+    // Initialize counters
+    Map<String, Integer> departmentCount = new Map<String, Integer>();
+    Map<String, Integer> roleCount = new Map<String, Integer>();
+    Map<String, Integer> profileCount = new Map<String, Integer>();
+    Map<String, Integer> statusCount = new Map<String, Integer>{
+        'active' => 0,
+        'inactive' => 0,
+        'submitted' => 0,
+        'pending' => 0,
+        'managerReviewed' => 0,
+        'managerPending' => 0
+    };
+    
+    // Question-specific analytics
+    Map<String, Integer> questionResponseCount = new Map<String, Integer>();
+    for (Feedback_Question__c q : questions) {
+        questionResponseCount.put(q.Id, 0);
+    }
+    
+    // Process each user
+    for (Map<String, Object> user : userResponses) {
+        String department = (String) user.get('department');
+        String role = (String) user.get('role');
+        String profile = (String) user.get('profile');
+        Boolean isActive = (Boolean) user.get('isActive');
+        Boolean hasSubmitted = (Boolean) user.get('hasSubmitted');
+        Boolean hasManagerResponse = (Boolean) user.get('hasManagerResponse');
+        
+        // Count departments
+        if (String.isNotBlank(department)) {
+            departmentCount.put(department, departmentCount.containsKey(department) ? departmentCount.get(department) + 1 : 1);
+        }
+        
+        // Count roles
+        if (String.isNotBlank(role)) {
+            roleCount.put(role, roleCount.containsKey(role) ? roleCount.get(role) + 1 : 1);
+        }
+        
+        // Count profiles
+        if (String.isNotBlank(profile)) {
+            profileCount.put(profile, profileCount.containsKey(profile) ? profileCount.get(profile) + 1 : 1);
+        }
+        
+        // Count statuses
+        if (isActive != null) {
+            statusCount.put(isActive ? 'active' : 'inactive', statusCount.get(isActive ? 'active' : 'inactive') + 1);
+        }
+        
+        if (hasSubmitted != null) {
+            statusCount.put(hasSubmitted ? 'submitted' : 'pending', statusCount.get(hasSubmitted ? 'submitted' : 'pending') + 1);
+        }
+        
+        if (hasManagerResponse != null) {
+            statusCount.put(hasManagerResponse ? 'managerReviewed' : 'managerPending', statusCount.get(hasManagerResponse ? 'managerReviewed' : 'managerPending') + 1);
+        }
+        
+        // Count question responses
+        List<Object> questionResponses = (List<Object>) user.get('questionResponses');
+        if (questionResponses != null) {
+            for (Object qr : questionResponses) {
+                Map<String, Object> questionResponse = (Map<String, Object>) qr;
+                String questionId = (String) questionResponse.get('questionId');
+                Boolean hasResponse = Boolean.valueOf((String) questionResponse.get('hasResponse'));
+                
+                if (hasResponse && questionResponseCount.containsKey(questionId)) {
+                    questionResponseCount.put(questionId, questionResponseCount.get(questionId) + 1);
+                }
+            }
+        }
+    }
+    
+    // Convert to chart-friendly format
+    analytics.put('departmentBreakdown', convertMapToChartData(departmentCount, 'Department'));
+    analytics.put('roleBreakdown', convertMapToChartData(roleCount, 'Role'));
+    analytics.put('profileBreakdown', convertMapToChartData(profileCount, 'Profile'));
+    analytics.put('userStatusBreakdown', convertMapToChartData(new Map<String, Integer>{
+        'Active Users' => statusCount.get('active'),
+        'Inactive Users' => statusCount.get('inactive')
+    }, 'User Status'));
+    analytics.put('responseStatusBreakdown', convertMapToChartData(new Map<String, Integer>{
+        'Submitted' => statusCount.get('submitted'),
+        'Pending' => statusCount.get('pending')
+    }, 'Response Status'));
+    analytics.put('managerFeedbackBreakdown', convertMapToChartData(new Map<String, Integer>{
+        'Manager Reviewed' => statusCount.get('managerReviewed'),
+        'Manager Pending' => statusCount.get('managerPending')
+    }, 'Manager Feedback'));
+    
+    // Question response rates
+    List<Map<String, Object>> questionStats = new List<Map<String, Object>>();
+    for (Feedback_Question__c q : questions) {
+        Integer responseCount = questionResponseCount.get(q.Id);
+        Double responseRate = userResponses.isEmpty() ? 0 : (Double.valueOf(responseCount) / userResponses.size()) * 100;
+        questionStats.add(new Map<String, Object>{
+            'questionId' => q.Id,
+            'questionText' => q.Question_Text__c.length() > 50 ? q.Question_Text__c.substring(0, 47) + '...' : q.Question_Text__c,
+            'responseCount' => responseCount,
+            'totalUsers' => userResponses.size(),
+            'responseRate' => Math.round(responseRate)
+        });
+    }
+    analytics.put('questionResponseRates', questionStats);
+    
+    // Overall stats
+    analytics.put('totalUsers', userResponses.size());
+    analytics.put('activeUsers', statusCount.get('active'));
+    analytics.put('submittedResponses', statusCount.get('submitted'));
+    analytics.put('managerReviews', statusCount.get('managerReviewed'));
+    analytics.put('overallResponseRate', userResponses.isEmpty() ? 0 : Math.round((Double.valueOf(statusCount.get('submitted')) / userResponses.size()) * 100));
+    analytics.put('managerReviewRate', statusCount.get('submitted') == 0 ? 0 : Math.round((Double.valueOf(statusCount.get('managerReviewed')) / statusCount.get('submitted')) * 100));
+    
+    return analytics;
+}
+
+// Helper method to convert map to chart data format
+private static List<Map<String, Object>> convertMapToChartData(Map<String, Integer> dataMap, String categoryName) {
+    List<Map<String, Object>> chartData = new List<Map<String, Object>>();
+    
+    for (String key : dataMap.keySet()) {
+        if (dataMap.get(key) > 0) { // Only include non-zero values
+            chartData.add(new Map<String, Object>{
+                'label' => String.isBlank(key) ? 'Not Specified' : key,
+                'value' => dataMap.get(key),
+                'category' => categoryName
+            });
+        }
+    }
+    
+    return chartData;
 }
                     
 }

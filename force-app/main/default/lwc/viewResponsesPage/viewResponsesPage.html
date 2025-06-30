@@ -36,6 +36,14 @@
                         <lightning-button-group>
                             <lightning-button label="Back" icon-name="utility:back" onclick={navigateBack}></lightning-button>
                             <lightning-button label="Refresh" icon-name="utility:refresh" onclick={refreshData}></lightning-button>
+                            <template if:true={hasAnalyticsData}>
+                                <lightning-button 
+                                    label={analyticsButtonLabel} 
+                                    icon-name={analyticsButtonIcon} 
+                                    onclick={toggleAnalytics}
+                                    variant={analyticsButtonVariant}>
+                                </lightning-button>
+                            </template>
                         </lightning-button-group>
                     </div>
                 </div>
@@ -67,6 +75,120 @@
                         </div>
                     </div>
                 </div>
+                
+                <!-- Analytics section -->
+                <template if:true={showAnalytics}>
+                    <div class="slds-box slds-m-bottom_medium">
+                        <div class="slds-text-heading_medium slds-m-bottom_medium">📊 Analytics Dashboard</div>
+                        
+                        <!-- Key Metrics Row -->
+                        <div class="slds-grid slds-wrap slds-gutters slds-m-bottom_large">
+                            <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
+                                <div class="slds-box slds-text-align_center analytics-metric">
+                                    <div class="slds-text-heading_small">Overall Response Rate</div>
+                                    <div class="slds-text-heading_large" style="color: #1976D2;">
+                                        {analyticsData.overallResponseRate}%
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
+                                <div class="slds-box slds-text-align_center analytics-metric">
+                                    <div class="slds-text-heading_small">Manager Review Rate</div>
+                                    <div class="slds-text-heading_large" style="color: #388E3C;">
+                                        {analyticsData.managerReviewRate}%
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
+                                <div class="slds-box slds-text-align_center analytics-metric">
+                                    <div class="slds-text-heading_small">Active Users</div>
+                                    <div class="slds-text-heading_large" style="color: #7B1FA2;">
+                                        {analyticsData.activeUsers}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
+                                <div class="slds-box slds-text-align_center analytics-metric">
+                                    <div class="slds-text-heading_small">Total Users</div>
+                                    <div class="slds-text-heading_large" style="color: #F57F17;">
+                                        {analyticsData.totalUsers}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Charts Section -->
+                        <div class="slds-grid slds-wrap slds-gutters">
+                            <!-- Response Status Chart -->
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3">
+                                <div class="slds-box chart-container">
+                                    <template if:true={chartJsInitialized}>
+                                        <canvas data-id="responseStatusChart" width="300" height="300"></canvas>
+                                    </template>
+                                    <template if:false={chartJsInitialized}>
+                                        <div class="fallback-chart">
+                                            <h3>Response Status Distribution</h3>
+                                            <template if:true={analyticsData.responseStatusBreakdown}>
+                                                <template for:each={analyticsData.responseStatusBreakdown} for:item="item">
+                                                    <div key={item.label} class="chart-item">
+                                                        <span class="chart-label">{item.label}:</span>
+                                                        <span class="chart-value">{item.value}</span>
+                                                    </div>
+                                                </template>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                            
+                            <!-- User Status Chart -->
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3">
+                                <div class="slds-box chart-container">
+                                    <canvas data-id="userStatusChart" width="300" height="300"></canvas>
+                                </div>
+                            </div>
+                            
+                            <!-- Manager Feedback Chart -->
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3">
+                                <div class="slds-box chart-container">
+                                    <canvas data-id="managerFeedbackChart" width="300" height="300"></canvas>
+                                </div>
+                            </div>
+                            
+                            <!-- Department Chart -->
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3">
+                                <div class="slds-box chart-container">
+                                    <canvas data-id="departmentChart" width="400" height="300"></canvas>
+                                </div>
+                            </div>
+                            
+                            <!-- Role Chart -->
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-3">
+                                <div class="slds-box chart-container">
+                                    <canvas data-id="roleChart" width="400" height="300"></canvas>
+                                </div>
+                            </div>
+                            
+                            <!-- Question Response Rates Chart -->
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-1 slds-large-size_1-of-3">
+                                <div class="slds-box chart-container">
+                                    <canvas data-id="questionResponseChart" width="600" height="300"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Analytics Filters -->
+                        <div class="slds-m-top_medium">
+                            <div class="slds-text-heading_small slds-m-bottom_small">Quick Filters</div>
+                            <lightning-button-group>
+                                <lightning-button label="Show All" onclick={handleShowAll} variant="neutral"></lightning-button>
+                                <lightning-button label="Only Submitted" onclick={handleShowSubmitted} variant="neutral"></lightning-button>
+                                <lightning-button label="Only Pending" onclick={handleShowPending} variant="neutral"></lightning-button>
+                                <lightning-button label="Manager Reviewed" onclick={handleShowReviewed} variant="neutral"></lightning-button>
+                            </lightning-button-group>
+                        </div>
+                    </div>
+                </template>
                 
                 <!-- Filters section -->
                 <div class="slds-grid slds-wrap slds-gutters slds-m-bottom_medium">
@@ -109,8 +231,13 @@
                                             <div class="slds-truncate" title={user.userName}>{user.userName}</div>
                                             <div class="slds-truncate slds-text-body_small" title={user.department}>
                                                 {user.department} • {user.role}
+                                            </div>
+                                            <div class="slds-m-top_xx-small">
+                                                <template if:true={user.isActive}>
+                                                    <span class="slds-badge slds-theme_success">Active</span>
+                                                </template>
                                                 <template if:false={user.isActive}>
-                                                    • Inactive
+                                                    <span class="slds-badge slds-theme_error">Inactive</span>
                                                 </template>
                                             </div>
                                         </td>

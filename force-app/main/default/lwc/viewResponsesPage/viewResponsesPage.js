@@ -2,6 +2,8 @@ import { LightningElement, wire, track } from 'lwc';
 import { CurrentPageReference, NavigationMixin } from 'lightning/navigation';
 import getAllUserResponsesForAdmin from '@salesforce/apex/QuestionsController.getAllUserResponsesForAdmin';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import { loadScript } from 'lightning/platformResourceLoader';
+import ChartJS from '@salesforce/resourceUrl/ChartJS';
 
 export default class ViewResponsesPage extends NavigationMixin(LightningElement) {
     @track isLoading = false;
@@ -9,6 +11,9 @@ export default class ViewResponsesPage extends NavigationMixin(LightningElement)
     @track error;
     @track searchTerm = '';
     @track viewOption = 'all'; // all, submitted, pending, reviewed
+    @track showAnalytics = false;
+    @track analyticsData;
+    @track chartJsInitialized = false;
     
     // Options for the view filter
     viewOptions = [
@@ -54,6 +59,7 @@ export default class ViewResponsesPage extends NavigationMixin(LightningElement)
             .then(result => {
                 console.log('User responses received:', JSON.stringify(result));
                 this.formData = result;
+                this.analyticsData = result.analytics || {};
                 this.processUserResponsesData();
                 this.applyFilters();
                 
@@ -164,6 +170,28 @@ export default class ViewResponsesPage extends NavigationMixin(LightningElement)
         this.applyFilters();
     }
     
+    // Analytics quick filters
+    handleShowAll() {
+        this.viewOption = 'all';
+        this.searchTerm = '';
+        this.applyFilters();
+    }
+    
+    handleShowSubmitted() {
+        this.viewOption = 'submitted';
+        this.applyFilters();
+    }
+    
+    handleShowPending() {
+        this.viewOption = 'pending';
+        this.applyFilters();
+    }
+    
+    handleShowReviewed() {
+        this.viewOption = 'reviewed';
+        this.applyFilters();
+    }
+    
     // Clear error message
     clearError() {
         this.error = null;
@@ -182,6 +210,223 @@ export default class ViewResponsesPage extends NavigationMixin(LightningElement)
     // Refresh the data
     refreshData() {
         this.loadUserResponses();
+    }
+    
+    // Toggle analytics visibility
+    toggleAnalytics() {
+        this.showAnalytics = !this.showAnalytics;
+        
+        if (this.showAnalytics && !this.chartJsInitialized) {
+            this.initializeChartJs();
+        } else if (this.showAnalytics && this.chartJsInitialized) {
+            // Re-render charts after toggle
+            setTimeout(() => {
+                this.renderCharts();
+            }, 100);
+        }
+    }
+    
+    // Initialize Chart.js library
+    async initializeChartJs() {
+        try {
+            console.log('Loading Chart.js from static resource...');
+            await loadScript(this, ChartJS);
+            console.log('Chart.js loaded successfully');
+            this.chartJsInitialized = true;
+            
+            // Small delay to ensure Chart is available globally
+            setTimeout(() => {
+                if (typeof Chart !== 'undefined') {
+                    console.log('Chart.js is available, rendering charts...');
+                    this.renderCharts();
+                } else {
+                    console.error('Chart.js not available after loading');
+                    this.showToast('Error', 'Chart library not available', 'error');
+                }
+            }, 200);
+        } catch (error) {
+            console.error('Error loading Chart.js:', error);
+            this.showToast('Error', 'Failed to load charting library: ' + error.message, 'error');
+            this.chartJsInitialized = false;
+        }
+    }
+    
+    // Render all charts
+    renderCharts() {
+        if (!this.chartJsInitialized) {
+            console.log('Chart.js not initialized yet');
+            return;
+        }
+        
+        if (!this.analyticsData) {
+            console.log('No analytics data available');
+            return;
+        }
+        
+        if (typeof Chart === 'undefined') {
+            console.error('Chart is not defined globally');
+            this.showToast('Error', 'Chart library not loaded properly', 'error');
+            return;
+        }
+        
+        console.log('Starting to render charts with data:', this.analyticsData);
+        
+        setTimeout(() => {
+            try {
+                this.renderPieChart('responseStatusChart', this.analyticsData.responseStatusBreakdown, 'Response Status Distribution');
+                this.renderPieChart('userStatusChart', this.analyticsData.userStatusBreakdown, 'User Status Distribution');
+                this.renderPieChart('managerFeedbackChart', this.analyticsData.managerFeedbackBreakdown, 'Manager Feedback Status');
+                this.renderBarChart('departmentChart', this.analyticsData.departmentBreakdown, 'Users by Department');
+                this.renderBarChart('roleChart', this.analyticsData.roleBreakdown, 'Users by Role');
+                this.renderBarChart('questionResponseChart', this.analyticsData.questionResponseRates, 'Question Response Rates');
+                console.log('All charts rendered successfully');
+            } catch (error) {
+                console.error('Error rendering charts:', error);
+                this.showToast('Error', 'Failed to render charts: ' + error.message, 'error');
+            }
+        }, 300);
+    }
+    
+    // Render pie chart
+    renderPieChart(canvasId, data, title) {
+        console.log(`Rendering pie chart: ${canvasId}`, data);
+        
+        const canvas = this.template.querySelector(`[data-id="${canvasId}"]`);
+        if (!canvas) {
+            console.error(`Canvas not found for ${canvasId}`);
+            return;
+        }
+        
+        if (!data || data.length === 0) {
+            console.log(`No data for chart ${canvasId}`);
+            return;
+        }
+        
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+            console.error(`Could not get 2D context for ${canvasId}`);
+            return;
+        }
+        
+        // Destroy existing chart if it exists
+        if (canvas.chart) {
+            canvas.chart.destroy();
+        }
+        
+        const colors = [
+            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', 
+            '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF'
+        ];
+        
+        try {
+            console.log(`Creating Chart.js pie chart for ${canvasId}`);
+            canvas.chart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: data.map(item => item.label),
+                    datasets: [{
+                        data: data.map(item => item.value),
+                        backgroundColor: colors.slice(0, data.length),
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: title
+                        },
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+            console.log(`Successfully created pie chart for ${canvasId}`);
+        } catch (error) {
+            console.error(`Error creating pie chart for ${canvasId}:`, error);
+        }
+    }
+    
+    // Render bar chart
+    renderBarChart(canvasId, data, title) {
+        console.log(`Rendering bar chart: ${canvasId}`, data);
+        
+        const canvas = this.template.querySelector(`[data-id="${canvasId}"]`);
+        if (!canvas) {
+            console.error(`Canvas not found for ${canvasId}`);
+            return;
+        }
+        
+        if (!data || data.length === 0) {
+            console.log(`No data for chart ${canvasId}`);
+            return;
+        }
+        
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+            console.error(`Could not get 2D context for ${canvasId}`);
+            return;
+        }
+        
+        // Destroy existing chart if it exists
+        if (canvas.chart) {
+            canvas.chart.destroy();
+        }
+        
+        let chartData, labels;
+        
+        if (canvasId === 'questionResponseChart') {
+            // Special handling for question response rates
+            labels = data.map(item => item.questionText);
+            chartData = data.map(item => item.responseRate);
+        } else {
+            labels = data.map(item => item.label);
+            chartData = data.map(item => item.value);
+        }
+        
+        try {
+            console.log(`Creating Chart.js bar chart for ${canvasId}`);
+            canvas.chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: canvasId === 'questionResponseChart' ? 'Response Rate (%)' : 'Count',
+                        data: chartData,
+                        backgroundColor: '#36A2EB',
+                        borderColor: '#1E88E5',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: title
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: canvasId === 'questionResponseChart' ? 100 : undefined
+                        },
+                        x: {
+                            ticks: {
+                                maxRotation: 45
+                            }
+                        }
+                    }
+                }
+            });
+            console.log(`Successfully created bar chart for ${canvasId}`);
+        } catch (error) {
+            console.error(`Error creating bar chart for ${canvasId}:`, error);
+        }
     }
     
     // Helper method to show toast notifications
@@ -249,5 +494,21 @@ export default class ViewResponsesPage extends NavigationMixin(LightningElement)
             pending: users.filter(u => !u.hasSubmitted).length,
             reviewed: users.filter(u => u.hasManagerResponse).length
         };
+    }
+    
+    get hasAnalyticsData() {
+        return this.analyticsData && Object.keys(this.analyticsData).length > 0;
+    }
+    
+    get analyticsButtonLabel() {
+        return this.showAnalytics ? 'Hide Analytics' : 'Show Analytics';
+    }
+    
+    get analyticsButtonIcon() {
+        return this.showAnalytics ? 'utility:chevronup' : 'utility:analytics';
+    }
+    
+    get analyticsButtonVariant() {
+        return this.showAnalytics ? 'brand' : 'neutral';
     }
 }
