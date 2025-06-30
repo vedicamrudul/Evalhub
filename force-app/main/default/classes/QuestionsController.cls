@@ -350,7 +350,7 @@ public static Map<String, Object> getAllUserResponsesForAdmin(Id formId) {
     String formDepartment = form.Department__c;
     
     List<User> allUsers = [
-        SELECT Id, Name, Department, UserRole.Name, IsActive
+        SELECT Id, Name, Department, UserRole.Name
         FROM User
         WHERE Id != :currentUser.Id
        AND department__c = :formDepartment
@@ -421,7 +421,6 @@ public static Map<String, Object> getAllUserResponsesForAdmin(Id formId) {
             'userName' => u.Name,
             'department' => u.Department,
             'role' => u.UserRole?.Name,
-            'isActive' => u.IsActive,
             'managerResponse' => managerResponseMap.containsKey(u.Id) ? managerResponseMap.get(u.Id) : null,
             'hasManagerResponse' => managerResponseMap.containsKey(u.Id)
         };
