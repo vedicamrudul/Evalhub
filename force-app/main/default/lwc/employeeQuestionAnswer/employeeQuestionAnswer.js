@@ -31,6 +31,7 @@ export default class EmployeeQuestionAnswer extends LightningElement {
             
             // Get all feedback data in one call
             const feedbackResponse = await getFeedbackData();
+            console.log('feedbackResponse', feedbackResponse);
             this.processFeedbackData(feedbackResponse);
         } catch (err) {
             console.error('Error loading data', err);
@@ -55,8 +56,12 @@ export default class EmployeeQuestionAnswer extends LightningElement {
                         ? this.getPicklistOptions(q.picklistValues) 
                         : []
                 }))
-            };
+            }
             console.log('Processed feedback data:', JSON.stringify(this.feedbackData));
+        }else{
+            this.feedbackData = {
+                ...data
+            }
         }
     }
 

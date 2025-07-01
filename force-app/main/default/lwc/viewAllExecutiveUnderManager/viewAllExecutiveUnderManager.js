@@ -10,6 +10,7 @@ export default class ViewAllExecutiveUnderManager extends LightningElement {
     @track showFeedbackInput = {};
     @track managerFeedbackText = {};
     @track isSubmitting = {};
+    @track formExists= {};
     error;
     isLoading = true;
     
@@ -36,14 +37,13 @@ export default class ViewAllExecutiveUnderManager extends LightningElement {
     // New getter to create display objects for each user
     get displayUsers() {
         return this.users.map(user => {
-            // Get response data if available
             const responseData = this.userResponses[user.Id];
             const isExpanded = user.expanded;
             const showFeedback = this.showFeedbackInput[user.Id] || false;
             const isSubmittingFeedback = this.isSubmitting[user.Id] || false;
             const feedbackText = this.managerFeedbackText[user.Id] || '';
-            
-            // Create the display object with all needed properties
+            const formExists = this.formExists[user.Id] || false; // Add this line
+    
             return {
                 user: user,
                 expandedClass: isExpanded ? 'expanded-view' : 'collapsed-view',
@@ -54,7 +54,8 @@ export default class ViewAllExecutiveUnderManager extends LightningElement {
                 questions: responseData ? responseData.questions : [],
                 showFeedbackForm: showFeedback,
                 isSubmitting: isSubmittingFeedback,
-                feedbackText: feedbackText
+                feedbackText: feedbackText,
+                formExists: formExists // Add this line
             };
         });
     }
@@ -79,6 +80,7 @@ export default class ViewAllExecutiveUnderManager extends LightningElement {
     }
     
     fetchEmployeeResponses(userId) {
+        console.log('fetchEmployeeResponses', userId);
         // Set loading state
         this.isLoading = true;
         
@@ -99,6 +101,11 @@ export default class ViewAllExecutiveUnderManager extends LightningElement {
                         [userId]: ''
                     };
                 }
+
+                this.formExists = {
+                    ...this.formExists,
+                    [userId]: result.formExists
+                };
                 
                 this.isLoading = false;
             })

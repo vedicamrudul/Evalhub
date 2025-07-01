@@ -25,17 +25,26 @@ public with sharing class QuestionsController {
     if (currentUser == null || !currentUser.IsActive) {
         throw new AuraHandledException('User is not active or does not exist.');
     }
-    
+    System.debug('currentUser: ' + currentUser);
+    System.debug('this is get feedback data');
     // Get active form for user's department
-    Feedback_Form__c form = [
+    List<Feedback_Form__c> forms = [
         SELECT Id 
         FROM Feedback_Form__c 
         WHERE Active_Flag__c = true 
         AND department__c = :currentUser.department__c 
         LIMIT 1
     ];
-    if (form == null) {
-        throw new AuraHandledException('No active form found for the user\'s department.');
+
+    System.debug('forms: ' + forms);
+    Map<String, Object> response = new Map<String, Object>();
+    Feedback_Form__c form = null;
+    if (forms.isEmpty()) {
+        response.put('formExists', false);
+        return response;
+    }else{
+        response.put('formExists', true);
+       form = forms[0];
     }
 
     // Get all questions for this form
@@ -49,7 +58,7 @@ public with sharing class QuestionsController {
     }
 
     // Prepare response structure
-    Map<String, Object> response = new Map<String, Object>();
+  
     List<Map<String, Object>> questions = new List<Map<String, Object>>();
     
     // Get all responses for these questions from this user (if any exist)
@@ -135,17 +144,24 @@ public static Map<String, Object> getEmployeeResponseForManager(Id employeeId){
     System.debug('Current User: ' + currentUser);
     // Get active form for manager's department, get questions for the form and employee and manager both responses
     // we will return hasEmployeeSubmitted and hasManagerSubmitted flags
-    Feedback_Form__c form = [
-        SELECT Id
-        FROM Feedback_Form__c 
-        WHERE Active_Flag__c = true
-        AND department__c = :employee.department__c
-        LIMIT 1
-    ];
 
-    if (form == null) {
-        throw new AuraHandledException('No active form found for the user\'s department.');
-    }
+    List<Feedback_Form__c> forms = [
+    SELECT Id
+    FROM Feedback_Form__c 
+    WHERE Active_Flag__c = true
+    AND department__c = :employee.department__c
+    LIMIT 1
+];
+
+Map<String, Object> response = new Map<String, Object>();
+if (forms.isEmpty()) {
+   response.put('formExists', false);
+   return response;
+}else{
+    response.put('formExists', true);
+}
+
+Feedback_Form__c form = forms[0];
 
     // Get all questions for this form
     List<Feedback_Question__c> formQuestions = [
@@ -164,7 +180,7 @@ public static Map<String, Object> getEmployeeResponseForManager(Id employeeId){
 // ManagerResponse Name	Name	Auto Number		True		
 // User Lookup	User_Lookup__c
 
-    Map<String, Object> response = new Map<String, Object>();
+   
     List<Map<String, Object>> questions = new List<Map<String, Object>>();
     
     // Get all responses for these questions from the employee
@@ -327,7 +343,7 @@ public static Map<String, Object> getAllUserResponsesForAdmin(Id formId) {
 
     // Get the form details
     Feedback_Form__c form = [
-        SELECT Id, Name, Department__c 
+        SELECT Id,Title__c, Name, Department__c 
         FROM Feedback_Form__c 
         WHERE Id = :formId
         LIMIT 1
@@ -389,6 +405,7 @@ public static Map<String, Object> getAllUserResponsesForAdmin(Id formId) {
     }
     result.put('questions', questionList);
     result.put('formName', form.Name);
+    result.put('formTitle', form.Title__c);
     result.put('formDepartment', form.Department__c);
 
     // 2. Prepare user responses structure

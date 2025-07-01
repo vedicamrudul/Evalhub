@@ -191,3 +191,14 @@ lightning-input, lightning-combobox {
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
+.form-not-exist-message {
+    font-size: 1.2rem; /* Increase the font size */
+    font-weight: bold; /* Make the text bold */
+    color: #d9534f; /* Use a red color to make it stand out */
+    background-color: #f2dede; /* Light red background for emphasis */
+    padding: 10px; /* Add some padding */
+    border-radius: 5px; /* Rounded corners */
+    text-align: center; /* Center the text */
+    margin-top: 10px; /* Add some space above */
+    margin-bottom: 10px; /* Add some space below */
+}

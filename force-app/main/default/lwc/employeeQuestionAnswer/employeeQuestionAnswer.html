@@ -10,6 +10,7 @@
             </lightning-card>
         </template>
 
+        <template if:true={feedbackData.formExists}>
         <!-- Content when not loading -->
         <template if:false={isLoading}>
             <!-- Submitted State -->
@@ -100,6 +101,13 @@
                     </div>
                 </lightning-card>
             </template>
+        </template>
+        </template>
+        <template if:false={feedbackData.formExists}>
+            <div class="form-not-exist-message">
+                A form has not yet been created for this month.
+                Kindly come back later.
+            </div>
         </template>
     </div>
 </template>

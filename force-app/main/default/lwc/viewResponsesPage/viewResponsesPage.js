@@ -224,6 +224,10 @@ export default class ViewResponsesPage extends NavigationMixin(LightningElement)
     get formName() {
         return this.formData?.formName || 'Untitled Form';
     }
+
+    get formTitle() {
+        return this.formData?.formTitle || 'Untitled Form';
+    }   
     
     get formDepartment() {
         return this.formData?.formDepartment || 'No department specified';

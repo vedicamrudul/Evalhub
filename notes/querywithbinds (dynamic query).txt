@@ -1,0 +1,44 @@
+Dynamic SOQL with Database.queryWithBinds
+(we have used this in formController to get filtered forms for the admin. The function name is getFilteredForms)
+
+What it is:
+
+Database.queryWithBinds is used to execute a dynamic SOQL query that contains bind variables. It allows you to insert actual values into a dynamic query safely using placeholders like :p0, :p1, etc., and then bind them via a map.
+
+When to use:
+
+When your query conditions (e.g., filters like department, month, year) are dynamic and not known at compile time.
+
+When you need to construct SOQL as a string in Apex based on user input or logic.
+
+When you want to avoid hardcoding or manually escaping values, which can lead to SOQL injection.
+
+Why it's needed:
+
+In normal (static) SOQL, Apex automatically binds variables using :myVar.
+
+In dynamic SOQL (query written as a string), you cannot directly use Apex variables inside the string, so bind variables (:p0, :p1) are used instead.
+
+queryWithBinds securely binds these placeholders to actual values passed in a map. This avoids string concatenation and improves safety and readability.
+
+Basic pattern:
+
+apex
+Copy
+Edit
+String query = 'SELECT Id FROM MyObject WHERE Field__c = :p0 AND Status__c = :p1';
+Map<String, Object> binds = new Map<String, Object>{
+    'p0' => 'SomeValue',
+    'p1' => 'Active'
+};
+
+List<MyObject__c> result = Database.queryWithBinds(query, binds);
+Benefits:
+
+Safer than string concatenation.
+
+Supports multiple conditions dynamically.
+
+Clear separation between query logic and parameter values.
+
+Avoids SOQL injection vulnerabilities.

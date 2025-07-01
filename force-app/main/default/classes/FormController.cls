@@ -87,60 +87,47 @@ public static List<Feedback_Form__c> getAllForms() {
 
 @AuraEnabled(cacheable=true)
 public static List<Feedback_Form__c> getFilteredForms(String department, Integer month, Integer year) {
-    // Base query
-    String query = 'SELECT Id, Title__c, department__c, Applicable_Month__c, Active_Flag__c FROM Feedback_Form__c WHERE ';
+    String query = 'SELECT Id, Title__c, department__c, Applicable_Month__c, Active_Flag__c FROM Feedback_Form__c';
     
-    // Add conditions based on parameters
     List<String> conditions = new List<String>();
-    List<Object> params = new List<Object>();
-    
-    // Department filter
-    if (department != null && department != 'All') {
-        conditions.add('department__c = :param' + params.size());
-        params.add(department);
-    }
-    
-    // Month filter
-    if (month != null && month > 0) {
-        conditions.add('CALENDAR_MONTH(Applicable_Month__c) = :param' + params.size());
-        params.add(month);
-    }
-    
-    // Year filter
-    if (year != null && year > 0) {
-        conditions.add('CALENDAR_YEAR(Applicable_Month__c) = :param' + params.size());
-        params.add(year);
-    }
-    
-    // If no conditions, get forms from the last 12 months
-    if (conditions.isEmpty()) {
-        Date twelveMonthsAgo = System.today().addMonths(-12);
-        conditions.add('Applicable_Month__c >= :param' + params.size());
-        params.add(twelveMonthsAgo);
-    }
-    
-    // Add conditions to query
-    query += String.join(conditions, ' AND ');
-    query += ' ORDER BY Applicable_Month__c DESC';
-    
-    // Execute dynamic query with parameters
-    List<Feedback_Form__c> forms = new List<Feedback_Form__c>();
-    
-    // Bind parameters and execute
-    for (Integer i = 0; i < params.size(); i++) {
-        query = query.replace(':param' + i, ':p' + i);
-    }
-    
-    // Create a map for binding
     Map<String, Object> bindMap = new Map<String, Object>();
-    for (Integer i = 0; i < params.size(); i++) {
-        bindMap.put('p' + i, params[i]);
+    Integer index = 0;
+
+    if (department != null && department != 'All') {
+        conditions.add('department__c = :p' + index);
+        bindMap.put('p' + index, department);
+        index++;
     }
-    
-    forms = Database.queryWithBinds(query, bindMap, AccessLevel.USER_MODE);
-    
-    return forms;
+
+    if (month != null && month > 0) {
+        conditions.add('CALENDAR_MONTH(Applicable_Month__c) = :p' + index);
+        bindMap.put('p' + index, month);
+        index++;
+    }
+
+    if (year != null && year > 0) {
+        conditions.add('CALENDAR_YEAR(Applicable_Month__c) = :p' + index);
+        bindMap.put('p' + index, year);
+        index++;
+    }
+
+    // Default: last 12 months
+    if (conditions.isEmpty()) {
+        conditions.add('Applicable_Month__c >= :p' + index);
+        bindMap.put('p' + index, System.today().addMonths(-12));
+    }
+
+    // Final query string
+    if (!conditions.isEmpty()) {
+        query += ' WHERE ' + String.join(conditions, ' AND ');
+    }
+
+    query += ' ORDER BY Applicable_Month__c DESC';
+
+    // Execute dynamic query
+    return Database.queryWithBinds(query, bindMap, AccessLevel.USER_MODE);
 }
+
 
 // ------------------------------------------------------------------------------------
 // FUNCTION TO GET QUESTIONS FOR A SPECIFIC FORM
