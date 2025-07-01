@@ -71,9 +71,48 @@
                                         required></lightning-input>
                                 </template>
 
-                                <template if:true={question.isNumber}>
-                                    <lightning-input type="number" label="Answer (1-5)" data-id={question.id} min="1"
-                                        max="5" required></lightning-input>
+                                <template if:true={question.isRating}>
+                                    <div class="rating-container">
+                                        <label class="slds-form-element__label">Rating (5 Stars)</label>
+                                        <div class="star-rating" data-id={question.id}>
+                                            <template for:each={question.starOptions} for:item="option">
+                                                <button key={option.order} type="button" class="star-button" 
+                                                    data-value={option.value} data-id={question.id} 
+                                                    onclick={handleStarClick}>
+                                                    {option.label}
+                                                </button>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <template if:true={question.isEmoji}>
+                                    <div class="emoji-container">
+                                        <label class="slds-form-element__label">How satisfied are you?</label>
+                                        <div class="emoji-rating" data-id={question.id}>
+                                            <template for:each={question.scaleOptions} for:item="option">
+                                                <button key={option.order} type="button" class="emoji-button" 
+                                                    data-value={option.value} data-id={question.id} 
+                                                    data-label={option.label} onclick={handleEmojiClick}>
+                                                    {option.value}
+                                                </button>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <template if:true={question.isSlider}>
+                                    <div class="slider-container">
+                                        <lightning-slider 
+                                            label="Rate from 1 to 10" 
+                                            min={question.sliderMin} 
+                                            max={question.sliderMax} 
+                                            step="1" 
+                                            data-id={question.id}
+                                            onchange={handleSliderChange}
+                                            class="slds-m-bottom_small">
+                                        </lightning-slider>
+                                    </div>
                                 </template>
 
                                 <template if:true={question.isPicklist}>

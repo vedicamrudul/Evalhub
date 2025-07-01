@@ -1,6 +1,14 @@
 <template>
     <div class="form-container">
         <lightning-card title="Create Feedback Form" icon-name="standard:feedback">
+            <template if:true={isLoadingMetadata}>
+                <div class="slds-p-around_medium slds-text-align_center">
+                    <lightning-spinner alternative-text="Loading configuration..." size="medium"></lightning-spinner>
+                    <p class="slds-p-top_small">Loading input type configuration...</p>
+                </div>
+            </template>
+            
+            <template if:false={isLoadingMetadata}>
             <div class="slds-p-around_medium content-container">
                 <!-- Form Details Section -->
                 <div class="section-header slds-m-bottom_medium">
@@ -103,18 +111,48 @@
                                 </lightning-combobox>
                             </div>
                             
-                            <template if:true={question.showPicklistValues}>
-                                <div class="slds-col slds-size_1-of-1 slds-p-top_medium picklist-values-container">
-                                    <lightning-textarea
-                                        label="Picklist Values (comma-separated)"
-                                        name="picklistValues"
-                                        value={question.picklistValues}
-                                        placeholder="Option 1, Option 2, Option 3"
+                            <template if:true={question.showScaleGroup}>
+                                <div key={question.scaleGroupKey} class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-top_medium">
+                                    <lightning-combobox
+                                        label="Scale Group"
+                                        name="scaleGroup"
+                                        required
                                         class="question-field"
+                                        value={question.scaleGroup}
+                                        options={question.scaleGroupOptions}
                                         onchange={handleQuestionChange}
                                         data-index={index}>
-                                    </lightning-textarea>
+                                    </lightning-combobox>
                                 </div>
+                            </template>
+                            
+                            <template if:true={question.showPicklistValues}>
+                                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-top_medium">
+                                    <lightning-combobox
+                                        label="Picklist Type"
+                                        name="picklistType"
+                                        required
+                                        class="question-field"
+                                        value={question.picklistType}
+                                        options={question.picklistTypeOptions}
+                                        onchange={handleQuestionChange}
+                                        data-index={index}>
+                                    </lightning-combobox>
+                                </div>
+                                
+                                <template if:true={question.showCustomPicklistValues}>
+                                    <div key={question.picklistKey} class="slds-col slds-size_1-of-1 slds-p-top_medium picklist-values-container">
+                                        <lightning-textarea
+                                            label="Custom Picklist Values (comma-separated)"
+                                            name="picklistValues"
+                                            value={question.picklistValues}
+                                            placeholder="Option 1, Option 2, Option 3"
+                                            class="question-field"
+                                            onchange={handleQuestionChange}
+                                            data-index={index}>
+                                        </lightning-textarea>
+                                    </div>
+                                </template>
                             </template>
                         </div>
                     </div>
@@ -150,6 +188,7 @@
                     </div>
                 </template>
             </div>
+            </template>
         </lightning-card>
     </div>
 </template>

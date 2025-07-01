@@ -50,11 +50,17 @@ export default class EmployeeQuestionAnswer extends LightningElement {
                 questions: data.questions.map(q => ({
                     ...q,
                     isText: q.inputType === 'Text',
-                    isNumber: q.inputType === 'Rating',
+                    isRating: q.inputType === 'Rating',
+                    isEmoji: q.inputType === 'Emoji',
                     isPicklist: q.inputType === 'Picklist',
+                    isSlider: q.inputType === 'Slider',
                     picklistOptions: q.inputType === 'Picklist' 
-                        ? this.getPicklistOptions(q.picklistValues) 
-                        : []
+                        ? (q.isMetadataPicklist ? q.picklistOptions : this.getPicklistOptions(q.picklistValues))
+                        : [],
+                    scaleOptions: q.scaleOptions || [],
+                    starOptions: q.inputType === 'Rating' ? this.createStarOptions() : [],
+                    sliderMin: q.sliderMin || 1,
+                    sliderMax: q.sliderMax || 10
                 }))
             }
             console.log('Processed feedback data:', JSON.stringify(this.feedbackData));
@@ -77,17 +83,84 @@ export default class EmployeeQuestionAnswer extends LightningElement {
         }));
     }
 
+    createStarOptions() {
+        // Create 5 star options for rating
+        return Array.from({length: 5}, (_, index) => ({
+            value: (index + 1).toString(),
+            label: '⭐',
+            order: index + 1
+        }));
+    }
+
+    handleStarClick(event) {
+        const questionId = event.target.dataset.id;
+        const value = event.target.dataset.value;
+        
+        // Remove selected class from all stars for this question
+        const starContainer = event.target.closest('.star-rating');
+        const allStars = starContainer.querySelectorAll('.star-button');
+        allStars.forEach(star => star.classList.remove('selected'));
+        
+        // Add selected class to clicked star and all previous stars
+        const clickedValue = parseInt(value);
+        allStars.forEach((star, index) => {
+            if (index < clickedValue) {
+                star.classList.add('selected');
+            }
+        });
+        
+        // Store the numeric value (1-5) instead of star symbol
+        starContainer.dataset.selectedValue = value;
+    }
+
+    handleEmojiClick(event) {
+        const questionId = event.target.dataset.id;
+        const value = event.target.dataset.value;
+        const emojiLabel = event.target.dataset.label;
+        
+        // Remove selected class from all emojis for this question
+        const emojiContainer = event.target.closest('.emoji-rating');
+        const allEmojis = emojiContainer.querySelectorAll('.emoji-button');
+        allEmojis.forEach(emoji => emoji.classList.remove('selected'));
+        
+        // Add selected class to clicked emoji
+        event.target.classList.add('selected');
+        
+        // Find the question to get the scale group
+        const question = this.feedbackData.questions.find(q => q.id === questionId);
+        const scaleGroup = question ? question.scaleGroup : '';
+        
+        // Store metadata reference instead of emoji value
+        // Format: emoji//scaleGroup//label
+        const metadataReference = `emoji//${scaleGroup}//${emojiLabel}`;
+        emojiContainer.dataset.selectedValue = metadataReference;
+        
+        // Also store the display emoji for immediate UI feedback
+        emojiContainer.dataset.displayValue = value;
+    }
+
+    handleSliderChange(event) {
+        const questionId = event.target.dataset.id;
+        const value = event.target.value;
+        
+        // Store the slider value
+        event.target.dataset.selectedValue = value;
+    }
+
     handleSubmit() {
         this.isSubmitting = true;
         
         // Get all answers
         const inputs = this.template.querySelectorAll('lightning-input[data-id]');
         const comboboxes = this.template.querySelectorAll('lightning-combobox[data-id]');
+        const starRatings = this.template.querySelectorAll('.star-rating[data-id]');
+        const emojiRatings = this.template.querySelectorAll('.emoji-rating[data-id]');
+        const sliders = this.template.querySelectorAll('lightning-slider[data-id]');
         
         const answers = [];
         let isValid = true;
         
-        // Process inputs
+        // Process text inputs
         inputs.forEach(input => {
             const questionId = input.dataset.id;
             const value = input.value;
@@ -111,6 +184,54 @@ export default class EmployeeQuestionAnswer extends LightningElement {
             
             if (!value) {
                 combobox.reportValidity();
+                isValid = false;
+                return;
+            }
+            
+            answers.push({
+                "questionId": questionId,
+                "answer": value
+            });
+        });
+        
+        // Process star ratings
+        starRatings.forEach(starRating => {
+            const questionId = starRating.dataset.id;
+            const value = starRating.dataset.selectedValue;
+            
+            if (!value) {
+                isValid = false;
+                return;
+            }
+            
+            answers.push({
+                "questionId": questionId,
+                "answer": value
+            });
+        });
+        
+        // Process emoji ratings
+        emojiRatings.forEach(emojiRating => {
+            const questionId = emojiRating.dataset.id;
+            const value = emojiRating.dataset.selectedValue;
+            
+            if (!value) {
+                isValid = false;
+                return;
+            }
+            
+            answers.push({
+                "questionId": questionId,
+                "answer": value
+            });
+        });
+        
+        // Process sliders
+        sliders.forEach(slider => {
+            const questionId = slider.dataset.id;
+            const value = slider.value;
+            
+            if (!value) {
                 isValid = false;
                 return;
             }
@@ -160,11 +281,38 @@ export default class EmployeeQuestionAnswer extends LightningElement {
         
         // Update the existing feedbackData with submitted answers
         if (this.feedbackData && this.feedbackData.questions) {
-            const updatedQuestions = this.feedbackData.questions.map(q => ({
-                ...q,
-                answer: answerMap[q.id] || q.answer,
-                hasResponse: true
-            }));
+            const updatedQuestions = this.feedbackData.questions.map(q => {
+                let displayAnswer = answerMap[q.id] || q.answer;
+                
+                // For emoji questions, if we stored a metadata reference, 
+                // format for employee view (emoji + label)
+                if (q.isEmoji && answerMap[q.id] && answerMap[q.id].startsWith('emoji//')) {
+                    const emojiContainer = this.template.querySelector(`.emoji-rating[data-id="${q.id}"]`);
+                    if (emojiContainer && emojiContainer.dataset.displayValue) {
+                        // Get the label from the question's scale options
+                        const selectedOption = q.scaleOptions.find(opt => opt.value === emojiContainer.dataset.displayValue);
+                        if (selectedOption) {
+                            displayAnswer = selectedOption.value + ' (' + selectedOption.label + ')';
+                        } else {
+                            displayAnswer = emojiContainer.dataset.displayValue;
+                        }
+                    }
+                }
+                
+                // For star ratings, if we stored a number, format for employee view (stars)
+                if (q.isRating && answerMap[q.id]) {
+                    const starCount = parseInt(answerMap[q.id]);
+                    if (!isNaN(starCount) && starCount >= 1 && starCount <= 5) {
+                        displayAnswer = '⭐'.repeat(starCount);
+                    }
+                }
+                
+                return {
+                    ...q,
+                    answer: displayAnswer,
+                    hasResponse: true
+                };
+            });
             
             // CHANGE: Create a new object to trigger reactivity properly
             this.feedbackData = {

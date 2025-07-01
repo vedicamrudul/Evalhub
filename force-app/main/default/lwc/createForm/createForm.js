@@ -1,6 +1,7 @@
 import { LightningElement, track } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import createForm from '@salesforce/apex/FormController.createForm';
+import getInputTypesFromMetadata from '@salesforce/apex/FormController.getInputTypesFromMetadata';
 
 export default class CreateForm extends LightningElement {
     @track formDetails = {
@@ -13,22 +14,46 @@ export default class CreateForm extends LightningElement {
     @track questions = [];
     @track showSuccessMessage = false;
     @track createdFormId = '';
+    @track inputTypeOptions = [];
+    @track scaleConfigurations = {};
+    @track picklistGroups = [];
+    @track isLoadingMetadata = true;
     
     departmentOptions = [
         { label: 'Sales', value: 'Sales' },
         { label: 'Marketing', value: 'Marketing' },
         { label: 'Technical', value: 'Technical' },
     ];
-    
-    inputTypeOptions = [
-        { label: 'Text', value: 'Text' },
-        { label: 'Picklist', value: 'Picklist' },
-        { label: 'Rating', value: 'Number' },
-    ];
+
+    get picklistTypeOptions() {
+        return this.picklistGroups;
+    }
     
     connectedCallback() {
-        // Add one question by default
-        this.handleAddQuestion();
+        this.loadInputTypesMetadata();
+    }
+
+    async loadInputTypesMetadata() {
+        try {
+            const metadataResult = await getInputTypesFromMetadata();
+            this.inputTypeOptions = metadataResult.inputTypeOptions;
+            this.scaleConfigurations = metadataResult.scaleConfigurations;
+            this.picklistGroups = metadataResult.picklistGroups || [];
+            this.isLoadingMetadata = false;
+            
+            // Add one question by default after metadata is loaded
+            this.handleAddQuestion();
+        } catch (error) {
+            console.error('Error loading input types metadata:', error);
+            this.dispatchEvent(
+                new ShowToastEvent({
+                    title: 'Error',
+                    message: 'Failed to load input types configuration',
+                    variant: 'error'
+                })
+            );
+            this.isLoadingMetadata = false;
+        }
     }
     
     handleFormInputChange(event) {
@@ -100,6 +125,21 @@ export default class CreateForm extends LightningElement {
                 // Update the showPicklistValues property if inputType changed
                 if (field === 'inputType') {
                     updatedQuestion.showPicklistValues = value === 'Picklist';
+                    updatedQuestion.showScaleGroup = value !== 'Text' && value !== 'Picklist' && value !== 'Slider';
+                    updatedQuestion.scaleGroup = '';
+                    updatedQuestion.picklistValues = '';
+                    updatedQuestion.picklistType = '';
+                    updatedQuestion.showCustomPicklistValues = false;
+                    updatedQuestion.scaleGroupOptions = this.getScaleGroupOptions(value);
+                    updatedQuestion.picklistTypeOptions = [...this.picklistGroups]; // Create new array reference
+                }
+                
+                // Update custom picklist visibility if picklistType changed
+                if (field === 'picklistType') {
+                    updatedQuestion.showCustomPicklistValues = value === 'Custom';
+                    if (value !== 'Custom') {
+                        updatedQuestion.picklistValues = '';
+                    }
                 }
                 return updatedQuestion;
             }
@@ -115,9 +155,33 @@ export default class CreateForm extends LightningElement {
             questionText: '',
             inputType: 'Text',
             picklistValues: '',
+            picklistType: '',
+            scaleGroup: '',
             showPicklistValues: false,
+            showCustomPicklistValues: false,
+            showScaleGroup: false,
+            scaleGroupOptions: [],
+            picklistTypeOptions: [...this.picklistGroups], // Create new array reference
+            scaleGroupKey: `scaleGroup-${newId}`,
+            picklistKey: `picklist-${newId}`,
             displayNumber: newQuestionNumber
         });
+    }
+
+    getScaleGroupOptions(inputType) {
+        if (!this.scaleConfigurations || !this.scaleConfigurations[inputType]) {
+            return [];
+        }
+        
+        const groups = new Set();
+        this.scaleConfigurations[inputType].forEach(config => {
+            groups.add(config.scaleGroup);
+        });
+        
+        return Array.from(groups).map(group => ({
+            label: group.replace(/_/g, ' '),
+            value: group
+        }));
     }
     
     handleDeleteQuestion(event) {
@@ -152,7 +216,9 @@ export default class CreateForm extends LightningElement {
             return {
                 questionText: q.questionText,
                 inputType: q.inputType,
-                picklistValues: q.inputType === 'Picklist' ? q.picklistValues : null
+                picklistValues: q.inputType === 'Picklist' && q.picklistType === 'Custom' ? q.picklistValues : null,
+                picklistType: q.inputType === 'Picklist' ? q.picklistType : null,
+                scaleGroup: q.inputType !== 'Text' && q.inputType !== 'Picklist' && q.inputType !== 'Slider' ? q.scaleGroup : null
             };
         });
         
@@ -201,12 +267,21 @@ export default class CreateForm extends LightningElement {
             applicableMonthInput: null
         };
         
+        const resetId = Date.now().toString();
         this.questions = [{
-            id: Date.now().toString(),
+            id: resetId,
             questionText: '',
             inputType: 'Text',
             picklistValues: '',
+            picklistType: '',
+            scaleGroup: '',
             showPicklistValues: false,
+            showCustomPicklistValues: false,
+            showScaleGroup: false,
+            scaleGroupOptions: [],
+            picklistTypeOptions: [...this.picklistGroups], // Create new array reference
+            scaleGroupKey: `scaleGroup-${resetId}`,
+            picklistKey: `picklist-${resetId}`,
             displayNumber: 1
         }];
         

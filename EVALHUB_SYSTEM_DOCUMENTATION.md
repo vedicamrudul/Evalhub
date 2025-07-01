@@ -88,10 +88,11 @@ Individual questions within feedback forms.
 - `Input_Type__c` (Picklist) - Text, Picklist, Rating/Number
 - `Picklist_Values__c` (Text) - Comma/semicolon separated values for picklist questions
 
-**Question Types Supported:**
+**Question Types Supported (Custom Metadata Driven):**
 - **Text Input** - Free text responses
-- **Rating/Number** - Numeric scale responses
-- **Picklist** - Pre-defined dropdown options
+- **Rating** - Star-based rating interface using `Input_Scale_Config__mdt` (Star_Config group)
+- **Emoji** - Emoji-based sentiment scale using `Input_Scale_Config__mdt` (Satisfaction_Emojis group)
+- **Picklist** - Pre-defined dropdown options using custom metadata groups (Levels, Work_Energy, etc.)
 
 ### 3. **Feedback_Response__c**
 Employee responses to feedback questions.
@@ -118,6 +119,22 @@ Manager feedback to employee submissions.
 - One manager response per employee per form
 - Manager can only respond to their direct subordinates
 - Responses tied to specific form cycles
+
+### 5. **Input_Scale_Config__mdt (Custom Metadata Type)**
+Configuration for dynamic input types and scale options.
+
+**Key Fields:**
+- `Input_Type__c` (Text) - Type of input (rating, emoji, picklist)
+- `Scale_Group__c` (Text) - Group classification (Star_Config, Satisfaction_Emojis, Levels, Work_Energy)
+- `Display_Label__c` (Text) - What users see (⭐, 😄, High, Energized)
+- `Value_Stored__c` (Text) - Value stored in database
+- `Order__c` (Number) - Display order within group
+- `Active__c` (Checkbox) - Whether configuration is active
+
+**Use Cases:**
+- **Rating (Stars)**: Group "Star_Config" - displays stars, stores numeric values
+- **Emoji Scale**: Group "Satisfaction_Emojis" - displays emojis for sentiment feedback
+- **Picklist Groups**: Groups like "Levels" (High/Medium/Low) or "Work_Energy" (Energized/Neutral/Drained)
 
 ---
 
@@ -155,6 +172,14 @@ public static List<Feedback_question__c> getQuestions(Id formId)
 ```
 - Retrieves all questions for a specific form
 - Used across multiple components for form display
+
+```apex
+@AuraEnabled(cacheable=true)
+public static Map<String, Object> getInputTypesFromMetadata()
+```
+- Retrieves input type configurations from `Input_Scale_Config__mdt`
+- Returns available input types and their scale configurations
+- Used by form creation component to dynamically build question options
 
 ### 2. **QuestionsController.cls**
 Core business logic for feedback submission and retrieval.
@@ -419,10 +444,11 @@ npm run lint
 - **Required field validation** across all forms
 - **User permission validation** before data operations
 
-### 4. **Flexible Question Types**
+### 4. **Flexible Question Types (Custom Metadata Driven)**
 - **Text responses** for open-ended feedback
-- **Numeric ratings** for quantitative assessment
-- **Picklist options** for standardized responses
+- **Star ratings** with configurable star displays and values
+- **Emoji scales** for sentiment-based feedback assessment
+- **Picklist options** with custom metadata groups and standardized responses
 
 ### 5. **Manager-Employee Interaction**
 - **Two-way feedback system** (employee → manager → employee)
@@ -475,9 +501,10 @@ List<Feedback_Response__c> responses = [
 
 ## 📈 Current Status & Future Roadmap
 
-### ✅ **Completed Features (as of June 2025)**
+### ✅ **Completed Features (as of January 2025)**
 - Basic form creation and management
-- Employee feedback submission
+- Employee feedback submission with multiple input types
+- **Custom metadata-driven question types** (stars, emojis, enhanced picklists)
 - Manager review and response system
 - Administrative oversight capabilities
 - Role-based access control
@@ -510,11 +537,12 @@ List<Feedback_Response__c> responses = [
    - Data export to BI tools
    - API endpoints for external access
 
-5. **Enhanced Question Types**
+5. **Advanced Question Features**
    - Multi-select options
-   - File upload capabilities
+   - File upload capabilities  
    - Matrix/grid questions
    - Conditional question logic
+   - Custom validation rules
 
 6. **Advanced Reporting**
    - Custom report builder

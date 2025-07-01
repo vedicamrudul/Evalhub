@@ -108,9 +108,15 @@ export default class ViewResponsesPage extends NavigationMixin(LightningElement)
             if (this.formData.questions) {
                 this.formData.questions.forEach(question => {
                     const response = responseMap[question.id];
+                    let formattedText = 'No answer provided';
+                    
+                    if (response?.isAnswered) {
+                        formattedText = this.formatResponseByType(response.answer, question.type);
+                    }
+                    
                     user.formattedAnswers.push({
                         questionId: question.id,
-                        text: response?.isAnswered ? response.answer : 'No answer provided',
+                        text: formattedText,
                         isAnswered: response?.isAnswered || false
                     });
                 });
@@ -118,6 +124,28 @@ export default class ViewResponsesPage extends NavigationMixin(LightningElement)
         });
     }
     
+    // Format response based on input type (Admin view - labels only)
+    formatResponseByType(answer, inputType) {
+        if (!answer) return 'No answer provided';
+        
+        switch (inputType) {
+            case 'Rating':
+                // Admin/Manager view shows text format only (no stars)
+                // The answer should already be formatted as "X out of 5" from Apex
+                return answer;
+            case 'Slider':
+                return `${answer}/10`;
+            case 'Emoji':
+                // Admin/Manager view shows label only (no emoji)
+                // The answer should already be formatted as label from Apex
+                return answer;
+            case 'Text':
+            case 'Picklist':
+            default:
+                return answer;
+        }
+    }
+
     // Apply filters based on search term and selected view
     applyFilters() {
         if (!this.formData?.userResponses) {

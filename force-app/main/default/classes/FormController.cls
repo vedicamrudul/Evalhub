@@ -23,6 +23,12 @@ public class FeedbackQuestionWrapper {
     
     @AuraEnabled
     public String picklistValues { get; set; }
+    
+    @AuraEnabled
+    public String scaleGroup { get; set; }
+    
+    @AuraEnabled
+    public String picklistType { get; set; } // 'Custom', 'Work_Energy', 'Levels', etc.
 }
 
 // create form with questions
@@ -50,7 +56,23 @@ public static String createForm(FeedbackFormWrapper formWrapper, List<FeedbackQu
         q.Feedback_Form__c = form.Id;
         q.Question_Text__c = question.questionText;
         q.Input_Type__c = question.inputType;
-        q.Picklist_Values__c = question.picklistValues; //text field only
+        
+        // For picklist types, store the custom values or metadata group
+        // For scale-based types (Rating, Emoji), store the scale group in picklistValues field for now
+        // For slider, no additional configuration needed
+        if (question.inputType == 'Picklist') {
+            if (question.picklistType == 'Custom') {
+                q.Picklist_Values__c = question.picklistValues;
+            } else {
+                // Metadata-driven picklist, store the group name
+                q.Picklist_Values__c = question.picklistType;
+            }
+        } else if (question.inputType == 'Slider') {
+            q.Picklist_Values__c = 'Slider_1_to_10'; // Default slider scale
+        } else if (question.scaleGroup != null) {
+            q.Picklist_Values__c = question.scaleGroup;
+        }
+        
         questions.add(q);
     }
     
@@ -142,6 +164,76 @@ public static List<Feedback_question__c> getQuestions(Id formId){
                                             ORDER BY CreatedDate ASC];
                                             
     return questions;
+}
+
+// Method to get input types from custom metadata
+@AuraEnabled(cacheable=true)
+public static Map<String, Object> getInputTypesFromMetadata() {
+    Map<String, Object> result = new Map<String, Object>();
+    
+    // Get all active input scale configurations
+    List<Input_Scale_Config__mdt> configs = [
+        SELECT Label, Input_Type__c, Scale_Group__c, Display_Label__c, Value_Stored__c, Order__c
+        FROM Input_Scale_Config__mdt
+        WHERE Active__c = true
+        ORDER BY Input_Type__c, Order__c
+    ];
+    
+    // Group configurations by input type
+    Map<String, List<Map<String, Object>>> groupedConfigs = new Map<String, List<Map<String, Object>>>();
+    Set<String> inputTypes = new Set<String>();
+    
+    for (Input_Scale_Config__mdt config : configs) {
+        String inputType = config.Input_Type__c;
+        inputTypes.add(inputType);
+        
+        if (!groupedConfigs.containsKey(inputType)) {
+            groupedConfigs.put(inputType, new List<Map<String, Object>>());
+        }
+        
+        Map<String, Object> configData = new Map<String, Object>{
+            'label' => config.Label,
+            'scaleGroup' => config.Scale_Group__c,
+            'displayLabel' => config.Display_Label__c,
+            'valueStored' => config.Value_Stored__c,
+            'order' => config.Order__c
+        };
+        
+        groupedConfigs.get(inputType).add(configData);
+    }
+    
+    // Create input type options for form creation
+    List<Map<String, String>> inputTypeOptions = new List<Map<String, String>>();
+    inputTypeOptions.add(new Map<String, String>{'label' => 'Text', 'value' => 'Text'});
+    inputTypeOptions.add(new Map<String, String>{'label' => 'Slider', 'value' => 'Slider'});
+    
+    for (String inputType : inputTypes) {
+        String label = inputType.substring(0, 1).toUpperCase() + inputType.substring(1);
+        inputTypeOptions.add(new Map<String, String>{'label' => label, 'value' => inputType});
+    }
+    
+    // Get picklist groups from metadata
+    List<Map<String, String>> picklistGroups = new List<Map<String, String>>();
+    picklistGroups.add(new Map<String, String>{'label' => 'Custom', 'value' => 'Custom'});
+    
+    // Get unique picklist groups from metadata
+    Set<String> picklistGroupSet = new Set<String>();
+    for (Input_Scale_Config__mdt config : configs) {
+        if (config.Input_Type__c == 'picklist') {
+            picklistGroupSet.add(config.Scale_Group__c);
+        }
+    }
+    
+    for (String picklistGroup : picklistGroupSet) {
+        String label = picklistGroup.replace('_', ' ');
+        picklistGroups.add(new Map<String, String>{'label' => label, 'value' => picklistGroup});
+    }
+    
+    result.put('inputTypeOptions', inputTypeOptions);
+    result.put('scaleConfigurations', groupedConfigs);
+    result.put('picklistGroups', picklistGroups);
+    
+    return result;
 }
 
 }

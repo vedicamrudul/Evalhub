@@ -198,7 +198,105 @@ lightning-input, lightning-combobox {
     background-color: #f2dede; /* Light red background for emphasis */
     padding: 10px; /* Add some padding */
     border-radius: 5px; /* Rounded corners */
-    text-align: center; /* Center the text */
-    margin-top: 10px; /* Add some space above */
-    margin-bottom: 10px; /* Add some space below */
+}
+
+/* Star Rating Styles */
+.rating-container {
+    margin: 1rem 0;
+}
+
+.star-rating {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.star-button {
+    background: none;
+    border: 2px solid #e0e7ff;
+    padding: 0.5rem 1rem;
+    font-size: 1.2rem;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    color: #6b7280;
+}
+
+.star-button:hover {
+    border-color: #fbbf24;
+    background-color: #fef3c7;
+    color: #d97706;
+    transform: scale(1.1);
+}
+
+.star-button.selected {
+    background-color: #fbbf24;
+    border-color: #f59e0b;
+    color: white;
+    box-shadow: 0 2px 8px rgba(251, 191, 36, 0.3);
+}
+
+/* Emoji Rating Styles */
+.emoji-container {
+    margin: 1rem 0;
+}
+
+.emoji-rating {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+    justify-content: center;
+}
+
+.emoji-button {
+    background: none;
+    border: 2px solid #e5e7eb;
+    padding: 0.75rem;
+    font-size: 2rem;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    width: 4rem;
+    height: 4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.emoji-button:hover {
+    border-color: #3b82f6;
+    background-color: #eff6ff;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+.emoji-button.selected {
+    background-color: #3b82f6;
+    border-color: #2563eb;
+    transform: scale(1.15);
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+}
+
+/* Slider Rating Styles */
+.slider-container {
+    margin: 1rem 0;
+    padding: 1rem;
+    background-color: #f8fafc;
+    border-radius: 8px;
+    border-left: 4px solid #8b5cf6;
+}
+
+.slider-container lightning-slider {
+    --slds-c-slider-color-background-track: #e2e8f0;
+    --slds-c-slider-color-background-fill: #8b5cf6;
+    --slds-c-slider-color-border-thumb: #8b5cf6;
+    --slds-c-slider-sizing-thumb: 1.25rem;
+}
+
+/* Form Labels */
+.slds-form-element__label {
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.5rem;
+    display: block;
 }

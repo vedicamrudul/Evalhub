@@ -7,6 +7,169 @@ public with sharing class QuestionsController {
     public String answer { get; set; } // Must match JS exactly
 }
 
+// Method to get scale configurations for a specific group
+public static List<Map<String, Object>> getScaleConfigurationsForGroup(String inputType, String scaleGroup) {
+    List<Input_Scale_Config__mdt> configs = [
+        SELECT Label, Display_Label__c, Value_Stored__c, Order__c
+        FROM Input_Scale_Config__mdt
+        WHERE Active__c = true
+        AND Input_Type__c = :inputType
+        AND Scale_Group__c = :scaleGroup
+        ORDER BY Order__c
+    ];
+    
+    List<Map<String, Object>> result = new List<Map<String, Object>>();
+    for (Input_Scale_Config__mdt config : configs) {
+        result.add(new Map<String, Object>{
+            'label' => config.Display_Label__c,
+            'value' => config.Value_Stored__c,
+            'order' => config.Order__c
+        });
+    }
+    
+    return result;
+}
+
+// Method to decode emoji metadata references for display - Employee view (emoji + label)
+public static String decodeEmojiResponseForEmployee(String storedResponse) {
+    if (String.isBlank(storedResponse)) {
+        return '';
+    }
+    
+    // Check if it's a metadata reference format: emoji//scaleGroup//label
+    if (storedResponse.startsWith('emoji//')) {
+        List<String> parts = storedResponse.split('//');
+        if (parts.size() == 3) {
+            String inputType = 'emoji';
+            String scaleGroup = parts[1];
+            String label = parts[2];
+            
+            // Query metadata to get both emoji and display label
+            // First try matching by Label field
+            List<Input_Scale_Config__mdt> configs = [
+                SELECT Value_Stored__c, Display_Label__c, Label
+                FROM Input_Scale_Config__mdt
+                WHERE Active__c = true
+                AND Input_Type__c = :inputType
+                AND Scale_Group__c = :scaleGroup
+                AND Label = :label
+                LIMIT 1
+            ];
+            
+            // If not found, try matching by Display_Label__c field
+            if (configs.isEmpty()) {
+                configs = [
+                    SELECT Value_Stored__c, Display_Label__c, Label
+                    FROM Input_Scale_Config__mdt
+                    WHERE Active__c = true
+                    AND Input_Type__c = :inputType
+                    AND Scale_Group__c = :scaleGroup
+                    AND Display_Label__c = :label
+                    LIMIT 1
+                ];
+            }
+            
+            if (!configs.isEmpty()) {
+                return configs[0].Value_Stored__c + ' (' + configs[0].Display_Label__c + ')';
+            }
+        }
+    }
+    
+    // If not metadata reference format, return as-is (backwards compatibility)
+    return storedResponse;
+}
+
+// Method to decode emoji metadata references for display - Manager/Admin view (label only)
+public static String decodeEmojiResponseForManager(String storedResponse) {
+    if (String.isBlank(storedResponse)) {
+        return '';
+    }
+    
+    // Check if it's a metadata reference format: emoji//scaleGroup//label
+    if (storedResponse.startsWith('emoji//')) {
+        List<String> parts = storedResponse.split('//');
+        if (parts.size() == 3) {
+            String inputType = 'emoji';
+            String scaleGroup = parts[1];
+            String label = parts[2];
+            
+            // Query metadata to get display label - try both Label and Display_Label__c fields
+            // First try matching by Label field
+            List<Input_Scale_Config__mdt> configs = [
+                SELECT Display_Label__c, Label
+                FROM Input_Scale_Config__mdt
+                WHERE Active__c = true
+                AND Input_Type__c = :inputType
+                AND Scale_Group__c = :scaleGroup
+                AND Label = :label
+                LIMIT 1
+            ];
+            
+            // If not found, try matching by Display_Label__c field
+            if (configs.isEmpty()) {
+                configs = [
+                    SELECT Display_Label__c, Label
+                    FROM Input_Scale_Config__mdt
+                    WHERE Active__c = true
+                    AND Input_Type__c = :inputType
+                    AND Scale_Group__c = :scaleGroup
+                    AND Display_Label__c = :label
+                    LIMIT 1
+                ];
+            }
+            
+            if (!configs.isEmpty()) {
+                return configs[0].Display_Label__c;
+            }
+        }
+    }
+    
+    // If not metadata reference format, return as-is (backwards compatibility)
+    return storedResponse;
+}
+
+// Method to decode star rating responses for display - Employee view (stars)
+public static String decodeStarResponseForEmployee(String storedResponse) {
+    if (String.isBlank(storedResponse)) {
+        return '';
+    }
+    
+    try {
+        Integer starCount = Integer.valueOf(storedResponse);
+        if (starCount >= 1 && starCount <= 5) {
+            String stars = '';
+            for (Integer i = 0; i < starCount; i++) {
+                stars += '⭐';
+            }
+            return stars;
+        }
+    } catch (Exception e) {
+        // If not a number, return as-is for backwards compatibility
+        return storedResponse;
+    }
+    
+    return storedResponse;
+}
+
+// Method to decode star rating responses for display - Manager/Admin view (text)
+public static String decodeStarResponseForManager(String storedResponse) {
+    if (String.isBlank(storedResponse)) {
+        return '';
+    }
+    
+    try {
+        Integer starCount = Integer.valueOf(storedResponse);
+        if (starCount >= 1 && starCount <= 5) {
+            return starCount + ' out of 5';
+        }
+    } catch (Exception e) {
+        // If not a number, return as-is for backwards compatibility
+        return storedResponse;
+    }
+    
+    return storedResponse;
+}
+
  public class ManagerResponse{
     @AuraEnabled
     public String managerResponseText { get; set; } // Must match JS exactly (case-sensitive)
@@ -85,8 +248,44 @@ public with sharing class QuestionsController {
             'picklistValues' => question.Picklist_Values__c
         };
         
+        // Handle scale-based input types
+        if (question.Input_Type__c == 'Rating' || question.Input_Type__c == 'Emoji') {
+            String scaleGroup = question.Picklist_Values__c; // Scale group stored in picklistValues field
+            if (String.isNotBlank(scaleGroup)) {
+                List<Map<String, Object>> scaleOptions = getScaleConfigurationsForGroup(question.Input_Type__c, scaleGroup);
+                qData.put('scaleOptions', scaleOptions);
+                qData.put('scaleGroup', scaleGroup);
+            }
+        } else if (question.Input_Type__c == 'Slider') {
+            // Slider is 1-10 scale, no metadata needed
+            qData.put('sliderMin', 1);
+            qData.put('sliderMax', 10);
+        } else if (question.Input_Type__c == 'Picklist') {
+            // Handle both custom and metadata-driven picklists
+            String picklistData = question.Picklist_Values__c;
+            if (picklistData == 'Work_Energy' || picklistData == 'Levels') {
+                // Metadata-driven picklist
+                List<Map<String, Object>> picklistOptions = getScaleConfigurationsForGroup('picklist', picklistData);
+                qData.put('picklistOptions', picklistOptions);
+                qData.put('isMetadataPicklist', true);
+                qData.put('picklistGroup', picklistData);
+            } else {
+                // Custom picklist values
+                qData.put('picklistValues', picklistData);
+                qData.put('isMetadataPicklist', false);
+            }
+        }
+        
         if (responseMap.containsKey(question.Id)) {
-            qData.put('answer', responseMap.get(question.Id).Rating_Answer__c);
+            String storedAnswer = responseMap.get(question.Id).Rating_Answer__c;
+            // Decode responses for employee view (emoji + label, stars as symbols)
+            if (question.Input_Type__c == 'Emoji') {
+                qData.put('answer', decodeEmojiResponseForEmployee(storedAnswer));
+            } else if (question.Input_Type__c == 'Rating') {
+                qData.put('answer', decodeStarResponseForEmployee(storedAnswer));
+            } else {
+                qData.put('answer', storedAnswer);
+            }
             qData.put('hasResponse', true);
         } else {
             qData.put('hasResponse', false);
@@ -212,8 +411,44 @@ Feedback_Form__c form = forms[0];
             'picklistValues' => question.Picklist_Values__c
         };
         
+        // Handle scale-based input types
+        if (question.Input_Type__c == 'Rating' || question.Input_Type__c == 'Emoji') {
+            String scaleGroup = question.Picklist_Values__c; // Scale group stored in picklistValues field
+            if (String.isNotBlank(scaleGroup)) {
+                List<Map<String, Object>> scaleOptions = getScaleConfigurationsForGroup(question.Input_Type__c, scaleGroup);
+                qData.put('scaleOptions', scaleOptions);
+                qData.put('scaleGroup', scaleGroup);
+            }
+        } else if (question.Input_Type__c == 'Slider') {
+            // Slider is 1-10 scale, no metadata needed
+            qData.put('sliderMin', 1);
+            qData.put('sliderMax', 10);
+        } else if (question.Input_Type__c == 'Picklist') {
+            // Handle both custom and metadata-driven picklists
+            String picklistData = question.Picklist_Values__c;
+            if (picklistData == 'Work_Energy' || picklistData == 'Levels') {
+                // Metadata-driven picklist
+                List<Map<String, Object>> picklistOptions = getScaleConfigurationsForGroup('picklist', picklistData);
+                qData.put('picklistOptions', picklistOptions);
+                qData.put('isMetadataPicklist', true);
+                qData.put('picklistGroup', picklistData);
+            } else {
+                // Custom picklist values
+                qData.put('picklistValues', picklistData);
+                qData.put('isMetadataPicklist', false);
+            }
+        }
+        
         if (employeeResponseMap.containsKey(question.Id)) {
-            qData.put('answer', employeeResponseMap.get(question.Id).Rating_Answer__c);
+            String storedAnswer = employeeResponseMap.get(question.Id).Rating_Answer__c;
+            // Decode responses for manager view (labels only)
+            if (question.Input_Type__c == 'Emoji') {
+                qData.put('answer', decodeEmojiResponseForManager(storedAnswer));
+            } else if (question.Input_Type__c == 'Rating') {
+                qData.put('answer', decodeStarResponseForManager(storedAnswer));
+            } else {
+                qData.put('answer', storedAnswer);
+            }
             qData.put('hasResponse', true);
         } else {
             qData.put('hasResponse', false);
@@ -450,7 +685,15 @@ public static Map<String, Object> getAllUserResponsesForAdmin(Id formId) {
             
             if (userQuestionResponseMap.containsKey(u.Id) && 
                 userQuestionResponseMap.get(u.Id).containsKey(q.Id)) {
-                answer = userQuestionResponseMap.get(u.Id).get(q.Id);
+                String storedAnswer = userQuestionResponseMap.get(u.Id).get(q.Id);
+                // Decode responses for admin view (labels only)
+                if (q.Input_Type__c == 'Emoji') {
+                    answer = decodeEmojiResponseForManager(storedAnswer);
+                } else if (q.Input_Type__c == 'Rating') {
+                    answer = decodeStarResponseForManager(storedAnswer);
+                } else {
+                    answer = storedAnswer;
+                }
                 hasResponse = true;
             }
             
