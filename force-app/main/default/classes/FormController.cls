@@ -69,6 +69,12 @@ public static String createForm(FeedbackFormWrapper formWrapper, List<FeedbackQu
             }
         } else if (question.inputType == 'Slider') {
             q.Picklist_Values__c = 'Slider_1_to_10'; // Default slider scale
+        } else if (question.inputType == 'Emoji') {
+            // Assign default or provided scale group for emoji questions
+            q.Picklist_Values__c = String.isNotBlank(question.scaleGroup) ? question.scaleGroup : 'Satisfaction_Emojis';
+        } else if (question.inputType == 'Rating') {
+            // Assign default or provided scale group for rating questions
+            q.Picklist_Values__c = String.isNotBlank(question.scaleGroup) ? question.scaleGroup : 'Star_Config';
         } else if (question.scaleGroup != null) {
             q.Picklist_Values__c = question.scaleGroup;
         }
