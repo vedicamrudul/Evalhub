@@ -41,6 +41,11 @@ export default class CreateForm extends LightningElement {
             this.picklistGroups = metadataResult.picklistGroups || [];
             this.isLoadingMetadata = false;
             
+            // console.log('metadataResult', metadataResult);
+            // console.log('inputTypeOptions', this.inputTypeOptions);
+            // console.log('scaleConfigurations', this.scaleConfigurations);
+            // console.log('picklistGroups', this.picklistGroups);
+
             // Add one question by default after metadata is loaded
             this.handleAddQuestion();
         } catch (error) {
@@ -70,6 +75,7 @@ export default class CreateForm extends LightningElement {
     handleMonthYearChange(event) {
         // Get the month-year value (format: YYYY-MM)
         const monthYearValue = event.target.value;
+        console.log('monthYearValue', monthYearValue);
         
         if (monthYearValue) {
             // Store the input value

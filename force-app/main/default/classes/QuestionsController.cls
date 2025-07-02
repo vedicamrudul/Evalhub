@@ -128,12 +128,52 @@ public static String decodeEmojiResponseForManager(String storedResponse) {
     return storedResponse;
 }
 
-// Method to decode star rating responses for display - Employee view (stars)
+// Method to decode star rating responses for display - Employee view (icons)
 public static String decodeStarResponseForEmployee(String storedResponse) {
     if (String.isBlank(storedResponse)) {
         return '';
     }
     
+    // Check if it's a metadata reference format: rating//scaleGroup//value
+    if (storedResponse.startsWith('rating//')) {
+        List<String> parts = storedResponse.split('//');
+        if (parts.size() == 3) {
+            String inputType = 'rating';
+            String scaleGroup = parts[1];
+            String ratingValue = parts[2];
+            
+            try {
+                Integer ratingCount = Integer.valueOf(ratingValue);
+                if (ratingCount >= 1 && ratingCount <= 5) {
+                    // Get the icon for this scale group
+                    List<Input_Scale_Config__mdt> configs = [
+                        SELECT Value_Stored__c, Display_Label__c
+                        FROM Input_Scale_Config__mdt
+                        WHERE Active__c = true
+                        AND Input_Type__c = :inputType
+                        AND Scale_Group__c = :scaleGroup
+                        LIMIT 1
+                    ];
+                    
+                    String icon = '⭐'; // Default to star
+                    if (!configs.isEmpty()) {
+                        icon = configs[0].Display_Label__c != null ? configs[0].Display_Label__c : configs[0].Value_Stored__c;
+                    }
+                    
+                    // Repeat the icon ratingCount times
+                    String result = '';
+                    for (Integer i = 0; i < ratingCount; i++) {
+                        result += icon;
+                    }
+                    return result;
+                }
+            } catch (Exception e) {
+                // If rating value is not a number, fall through to backwards compatibility
+            }
+        }
+    }
+    
+    // Backwards compatibility: if it's just a number, assume it's star rating
     try {
         Integer starCount = Integer.valueOf(storedResponse);
         if (starCount >= 1 && starCount <= 5) {
@@ -157,6 +197,24 @@ public static String decodeStarResponseForManager(String storedResponse) {
         return '';
     }
     
+    // Check if it's a metadata reference format: rating//scaleGroup//value
+    if (storedResponse.startsWith('rating//')) {
+        List<String> parts = storedResponse.split('//');
+        if (parts.size() == 3) {
+            String ratingValue = parts[2];
+            
+            try {
+                Integer ratingCount = Integer.valueOf(ratingValue);
+                if (ratingCount >= 1 && ratingCount <= 5) {
+                    return ratingCount + ' out of 5';
+                }
+            } catch (Exception e) {
+                // If rating value is not a number, fall through to backwards compatibility
+            }
+        }
+    }
+    
+    // Backwards compatibility: if it's just a number
     try {
         Integer starCount = Integer.valueOf(storedResponse);
         if (starCount >= 1 && starCount <= 5) {

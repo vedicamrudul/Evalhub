@@ -58,7 +58,7 @@ export default class EmployeeQuestionAnswer extends LightningElement {
                         ? (q.isMetadataPicklist ? q.picklistOptions : this.getPicklistOptions(q.picklistValues))
                         : [],
                     scaleOptions: q.scaleOptions || [],
-                    starOptions: q.inputType === 'Rating' ? this.createStarOptions() : [],
+                    starOptions: q.inputType === 'Rating' ? this.createRatingOptions(q.scaleOptions) : [],
                     sliderMin: q.sliderMin || 1,
                     sliderMax: q.sliderMax || 10
                 }))
@@ -81,13 +81,21 @@ export default class EmployeeQuestionAnswer extends LightningElement {
             label: value.trim(),
             value: value.trim()
         }));
-    }
+        }
 
-    createStarOptions() {
-        // Create 5 star options for rating
+    createRatingOptions(scaleOptions) {
+        // If no scale options provided, default to stars
+        let iconLabel = '⭐';
+        
+        // Get the icon from the first scale option if available
+        if (scaleOptions && scaleOptions.length > 0) {
+            iconLabel = scaleOptions[0].label || scaleOptions[0].value || '⭐';
+        }
+        
+        // Always create exactly 5 rating options regardless of metadata configuration
         return Array.from({length: 5}, (_, index) => ({
             value: (index + 1).toString(),
-            label: '⭐',
+            label: iconLabel,
             order: index + 1
         }));
     }
@@ -96,21 +104,27 @@ export default class EmployeeQuestionAnswer extends LightningElement {
         const questionId = event.target.dataset.id;
         const value = event.target.dataset.value;
         
-        // Remove selected class from all stars for this question
+        // Remove selected class from all rating buttons for this question
         const starContainer = event.target.closest('.star-rating');
-        const allStars = starContainer.querySelectorAll('.star-button');
-        allStars.forEach(star => star.classList.remove('selected'));
+        const allButtons = starContainer.querySelectorAll('.star-button');
+        allButtons.forEach(button => button.classList.remove('selected'));
         
-        // Add selected class to clicked star and all previous stars
+        // Add selected class to clicked button and all previous buttons (cumulative selection)
         const clickedValue = parseInt(value);
-        allStars.forEach((star, index) => {
+        allButtons.forEach((button, index) => {
             if (index < clickedValue) {
-                star.classList.add('selected');
+                button.classList.add('selected');
             }
         });
         
-        // Store the numeric value (1-5) instead of star symbol
-        starContainer.dataset.selectedValue = value;
+        // Find the question to get the scale group
+        const question = this.feedbackData.questions.find(q => q.id === questionId);
+        const scaleGroup = question ? question.scaleGroup : '';
+        
+        // Store metadata reference similar to emoji handling
+        // Format: rating//scaleGroup//value
+        const metadataReference = `rating//${scaleGroup}//${value}`;
+        starContainer.dataset.selectedValue = metadataReference;
     }
 
     handleEmojiClick(event) {

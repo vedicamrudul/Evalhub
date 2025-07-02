@@ -73,7 +73,7 @@
 
                                 <template if:true={question.isRating}>
                                     <div class="rating-container">
-                                        <label class="slds-form-element__label">Rating (5 Stars)</label>
+                                        <label class="slds-form-element__label">Please select your rating</label>
                                         <div class="star-rating" data-id={question.id}>
                                             <template for:each={question.starOptions} for:item="option">
                                                 <button key={option.order} type="button" class="star-button" 

@@ -184,6 +184,8 @@ public static Map<String, Object> getInputTypesFromMetadata() {
         WHERE Active__c = true
         ORDER BY Input_Type__c, Order__c
     ];
+
+    System.debug('configs: ' + configs);
     
     // Group configurations by input type
     Map<String, List<Map<String, Object>>> groupedConfigs = new Map<String, List<Map<String, Object>>>();
@@ -192,7 +194,8 @@ public static Map<String, Object> getInputTypesFromMetadata() {
     for (Input_Scale_Config__mdt config : configs) {
         String inputType = config.Input_Type__c;
         inputTypes.add(inputType);
-        
+
+        System.debug('inputType: ' + inputType);
         if (!groupedConfigs.containsKey(inputType)) {
             groupedConfigs.put(inputType, new List<Map<String, Object>>());
         }
@@ -205,22 +208,29 @@ public static Map<String, Object> getInputTypesFromMetadata() {
             'order' => config.Order__c
         };
         
+        System.debug('configData: ' + configData);
         groupedConfigs.get(inputType).add(configData);
     }
+    System.debug('groupedConfigs: ' + groupedConfigs);
     
     // Create input type options for form creation
     List<Map<String, String>> inputTypeOptions = new List<Map<String, String>>();
     inputTypeOptions.add(new Map<String, String>{'label' => 'Text', 'value' => 'Text'});
     inputTypeOptions.add(new Map<String, String>{'label' => 'Slider', 'value' => 'Slider'});
+
+    System.debug('inputTypeOptions: ' + inputTypeOptions);
     
     for (String inputType : inputTypes) {
         String label = inputType.substring(0, 1).toUpperCase() + inputType.substring(1);
         inputTypeOptions.add(new Map<String, String>{'label' => label, 'value' => inputType});
     }
     
+    System.debug('inputTypeOptions Again AAAAH: ' + inputTypeOptions);
     // Get picklist groups from metadata
     List<Map<String, String>> picklistGroups = new List<Map<String, String>>();
     picklistGroups.add(new Map<String, String>{'label' => 'Custom', 'value' => 'Custom'});
+
+    System.debug('picklistGroups: ' + picklistGroups);
     
     // Get unique picklist groups from metadata
     Set<String> picklistGroupSet = new Set<String>();
@@ -238,6 +248,8 @@ public static Map<String, Object> getInputTypesFromMetadata() {
     result.put('inputTypeOptions', inputTypeOptions);
     result.put('scaleConfigurations', groupedConfigs);
     result.put('picklistGroups', picklistGroups);
+
+    System.debug('result: ' + result);
     
     return result;
 }
