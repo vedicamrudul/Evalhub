@@ -76,53 +76,14 @@ export default class EmployeeQuestionAnswer extends LightningElement {
     }
 
    async handleSendEmailOnFeedbackSubmit(){
-        console.log('🚀 Starting email sending process...');
-        console.log('⏰ Timestamp:', new Date().toISOString());
+        console.log('📧 Sending email notifications...');
         
         try {
             const result = await sendEmailOnFeedbackSubmit();
-            
-            console.log('✅ Email sending method completed!');
-            console.log('📧 DETAILED EMAIL RESULT:');
-            console.log('═══════════════════════════════════════');
-            console.log(result);
-            console.log('═══════════════════════════════════════');
-            
-            // Parse the result to show specific components
-            if (result.includes('SUCCESS:')) {
-                console.log('🎉 EMAIL STATUS: SUCCESS');
-            } else if (result.includes('PARTIAL SUCCESS:')) {
-                console.log('⚠️ EMAIL STATUS: PARTIAL SUCCESS');
-            } else if (result.includes('ERROR:')) {
-                console.log('❌ EMAIL STATUS: ERROR');
-            }
-            
-            // Check for specific issues
-            if (result.includes('FAILED:')) {
-                console.log('💥 SOME EMAILS FAILED TO SEND');
-            }
-            if (result.includes('EXCEPTION:')) {
-                console.log('🚨 EXCEPTIONS OCCURRED DURING SENDING');
-            }
-            if (result.includes('Org Type:')) {
-                const orgMatch = result.match(/Org Type: ([^(]+)/);
-                if (orgMatch) {
-                    console.log('🏢 Organization Type:', orgMatch[1].trim());
-                    if (orgMatch[1].includes('Developer Edition')) {
-                        console.log('⚠️ WARNING: Developer Edition has strict email limits (5-15 emails/day)!');
-                    }
-                }
-            }
-            
+            console.log('✅ Email Result:', result);
             return result;
         } catch (error) {
-            console.log('❌ Email sending failed with error:');
-            console.log('═══════════════════════════════════════');
-            console.error('Error Object:', error);
-            console.error('Error Message:', error.message || 'No message available');
-            console.error('Error Body:', error.body || 'No body available');
-            console.error('Full Error JSON:', JSON.stringify(error));
-            console.log('═══════════════════════════════════════');
+            console.error('❌ Email sending failed:', error.message || error);
             throw error;
         }
     }
@@ -353,30 +314,21 @@ export default class EmployeeQuestionAnswer extends LightningElement {
             respondentId: this.userData.Id
         })
         .then(async () => {
-            console.log('💾 Feedback submitted successfully to database');
+            console.log('✅ Feedback submitted to database');
             
-            // Handle email sending with proper error handling
+            // Send email notifications
             try {
                 const emailResult = await this.handleSendEmailOnFeedbackSubmit();
-                console.log('📬 Email notification process completed');
-                console.log('📋 Final Email Status:', emailResult);
-                
-                // Show success message including email status
-                this.showToast('Success', 'Feedback submitted and email notifications sent successfully', 'success');
+                this.showToast('Success', 'Feedback submitted and emails sent successfully', 'success');
             } catch (emailError) {
-                console.error('📧 Email sending failed but feedback was saved:', emailError);
-                // Show partial success message
-                this.showToast('Partial Success', 'Feedback submitted successfully, but email notification failed', 'warning');
+                console.error('Email failed:', emailError);
+                this.showToast('Partial Success', 'Feedback submitted, but email notification failed', 'warning');
             }
             
-            // CHANGE: Immediately update the UI without waiting for server refresh
             this.updateSubmittedFeedback(answers);
-            
-            // CHANGE: Don't call loadData() as it can override our UI state
-            // this.loadData();
         })
         .catch(error => {
-            console.error('💥 Feedback submission failed:', JSON.stringify(error));
+            console.error('❌ Feedback submission failed:', error);
             this.showToast('Error', error.body?.message || 'Submission failed', 'error');
         })
         .finally(() => {
