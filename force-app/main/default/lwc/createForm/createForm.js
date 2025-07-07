@@ -147,6 +147,10 @@ export default class CreateForm extends LightningElement {
                         updatedQuestion.picklistValues = '';
                     }
                 }
+                
+                // Update preview data when scale group changes
+                updatedQuestion.previewData = this.generatePreviewData(updatedQuestion.inputType, updatedQuestion.scaleGroup);
+                
                 return updatedQuestion;
             }
             return question;
@@ -170,7 +174,8 @@ export default class CreateForm extends LightningElement {
             picklistTypeOptions: [...this.picklistGroups], // Create new array reference
             scaleGroupKey: `scaleGroup-${newId}`,
             picklistKey: `picklist-${newId}`,
-            displayNumber: newQuestionNumber
+            displayNumber: newQuestionNumber,
+            previewData: this.generatePreviewData('Text', '')
         });
     }
 
@@ -188,6 +193,47 @@ export default class CreateForm extends LightningElement {
             label: group.replace(/_/g, ' '),
             value: group
         }));
+    }
+
+    generatePreviewData(inputType, scaleGroup) {
+        if (!inputType || !scaleGroup || !this.scaleConfigurations) {
+            return { showPreview: false, options: [] };
+        }
+
+        const configs = this.scaleConfigurations[inputType] || [];
+        const groupConfigs = configs.filter(config => config.scaleGroup === scaleGroup);
+        
+        if (groupConfigs.length === 0) {
+            return { showPreview: false, options: [] };
+        }
+
+        const sortedConfigs = groupConfigs.sort((a, b) => (a.order || 0) - (b.order || 0));
+        
+        if (inputType === 'Emoji') {
+            return {
+                showPreview: true,
+                isEmoji: true,
+                isRating: false,
+                options: sortedConfigs.map(config => ({
+                    label: config.displayLabel || config.label,
+                    value: config.valueStored || config.displayLabel || '😊'
+                }))
+            };
+        } else if (inputType === 'Rating') {
+            // For rating, create 5 options using the same icon
+            const icon = sortedConfigs[0] ? (sortedConfigs[0].valueStored || '⭐') : '⭐';
+            return {
+                showPreview: true,
+                isEmoji: false,
+                isRating: true,
+                options: Array.from({length: 5}, (_, index) => ({
+                    label: icon,
+                    value: (index + 1).toString()
+                }))
+            };
+        }
+
+        return { showPreview: false, options: [] };
     }
     
     handleDeleteQuestion(event) {
@@ -288,7 +334,8 @@ export default class CreateForm extends LightningElement {
             picklistTypeOptions: [...this.picklistGroups], // Create new array reference
             scaleGroupKey: `scaleGroup-${resetId}`,
             picklistKey: `picklist-${resetId}`,
-            displayNumber: 1
+            displayNumber: 1,
+            previewData: this.generatePreviewData('Text', '')
         }];
         
         // Hide success message after 5 seconds

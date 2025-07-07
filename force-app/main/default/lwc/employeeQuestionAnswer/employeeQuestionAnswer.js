@@ -3,6 +3,7 @@ import getCurrentUser from '@salesforce/apex/UserController.getCurrentUser';
 import getFeedbackData from '@salesforce/apex/QuestionsController.getFeedbackData';
 import submitFeedback from '@salesforce/apex/QuestionsController.submitFeedback';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import sendEmailOnFeedbackSubmit from '@salesforce/apex/EmailController.sendEmailOnFeedbackSubmit';
 
 export default class EmployeeQuestionAnswer extends LightningElement {
     @track userData;
@@ -13,6 +14,9 @@ export default class EmployeeQuestionAnswer extends LightningElement {
     @track viewSubmissionButtonClicked = false;
     @track viewManagerFeedbackClicked = false;
     
+
+    // lets run send email when we load this page to test what is getting debugged.
+   
     // New property to track if any responses are being viewed
     get isViewingResponses() {
         return this.viewSubmissionButtonClicked || this.viewManagerFeedbackClicked;
@@ -71,6 +75,58 @@ export default class EmployeeQuestionAnswer extends LightningElement {
         }
     }
 
+   async handleSendEmailOnFeedbackSubmit(){
+        console.log('🚀 Starting email sending process...');
+        console.log('⏰ Timestamp:', new Date().toISOString());
+        
+        try {
+            const result = await sendEmailOnFeedbackSubmit();
+            
+            console.log('✅ Email sending method completed!');
+            console.log('📧 DETAILED EMAIL RESULT:');
+            console.log('═══════════════════════════════════════');
+            console.log(result);
+            console.log('═══════════════════════════════════════');
+            
+            // Parse the result to show specific components
+            if (result.includes('SUCCESS:')) {
+                console.log('🎉 EMAIL STATUS: SUCCESS');
+            } else if (result.includes('PARTIAL SUCCESS:')) {
+                console.log('⚠️ EMAIL STATUS: PARTIAL SUCCESS');
+            } else if (result.includes('ERROR:')) {
+                console.log('❌ EMAIL STATUS: ERROR');
+            }
+            
+            // Check for specific issues
+            if (result.includes('FAILED:')) {
+                console.log('💥 SOME EMAILS FAILED TO SEND');
+            }
+            if (result.includes('EXCEPTION:')) {
+                console.log('🚨 EXCEPTIONS OCCURRED DURING SENDING');
+            }
+            if (result.includes('Org Type:')) {
+                const orgMatch = result.match(/Org Type: ([^(]+)/);
+                if (orgMatch) {
+                    console.log('🏢 Organization Type:', orgMatch[1].trim());
+                    if (orgMatch[1].includes('Developer Edition')) {
+                        console.log('⚠️ WARNING: Developer Edition has strict email limits (5-15 emails/day)!');
+                    }
+                }
+            }
+            
+            return result;
+        } catch (error) {
+            console.log('❌ Email sending failed with error:');
+            console.log('═══════════════════════════════════════');
+            console.error('Error Object:', error);
+            console.error('Error Message:', error.message || 'No message available');
+            console.error('Error Body:', error.body || 'No body available');
+            console.error('Full Error JSON:', JSON.stringify(error));
+            console.log('═══════════════════════════════════════');
+            throw error;
+        }
+    }
+
     getPicklistOptions(valueString) {
         if (!valueString) return [];
         
@@ -81,7 +137,7 @@ export default class EmployeeQuestionAnswer extends LightningElement {
             label: value.trim(),
             value: value.trim()
         }));
-        }
+    }
 
     createRatingOptions(scaleOptions) {
         // If no scale options provided, default to stars
@@ -98,6 +154,35 @@ export default class EmployeeQuestionAnswer extends LightningElement {
             label: iconLabel,
             order: index + 1
         }));
+    }
+
+    formatRatingForDisplay(ratingAnswer, scaleOptions) {
+        // Check if it's a metadata reference format: rating//scaleGroup//value
+        if (ratingAnswer && ratingAnswer.startsWith('rating//')) {
+            const parts = ratingAnswer.split('//');
+            if (parts.length === 3) {
+                const ratingValue = parseInt(parts[2]);
+                if (!isNaN(ratingValue) && ratingValue >= 1 && ratingValue <= 5) {
+                    // Get the icon from scale options
+                    let iconLabel = '⭐'; // Default fallback
+                    if (scaleOptions && scaleOptions.length > 0) {
+                        iconLabel = scaleOptions[0].label || scaleOptions[0].value || '⭐';
+                    }
+                    
+                    // Repeat the icon ratingValue times
+                    return iconLabel.repeat(ratingValue);
+                }
+            }
+        }
+        
+        // Backwards compatibility: if it's just a number
+        const ratingValue = parseInt(ratingAnswer);
+        if (!isNaN(ratingValue) && ratingValue >= 1 && ratingValue <= 5) {
+            return '⭐'.repeat(ratingValue);
+        }
+        
+        // If we can't parse it, return as-is
+        return ratingAnswer;
     }
 
     handleStarClick(event) {
@@ -267,8 +352,22 @@ export default class EmployeeQuestionAnswer extends LightningElement {
             answers: answers,
             respondentId: this.userData.Id
         })
-        .then(() => {
-            this.showToast('Success', 'Feedback submitted successfully', 'success');
+        .then(async () => {
+            console.log('💾 Feedback submitted successfully to database');
+            
+            // Handle email sending with proper error handling
+            try {
+                const emailResult = await this.handleSendEmailOnFeedbackSubmit();
+                console.log('📬 Email notification process completed');
+                console.log('📋 Final Email Status:', emailResult);
+                
+                // Show success message including email status
+                this.showToast('Success', 'Feedback submitted and email notifications sent successfully', 'success');
+            } catch (emailError) {
+                console.error('📧 Email sending failed but feedback was saved:', emailError);
+                // Show partial success message
+                this.showToast('Partial Success', 'Feedback submitted successfully, but email notification failed', 'warning');
+            }
             
             // CHANGE: Immediately update the UI without waiting for server refresh
             this.updateSubmittedFeedback(answers);
@@ -277,7 +376,7 @@ export default class EmployeeQuestionAnswer extends LightningElement {
             // this.loadData();
         })
         .catch(error => {
-            console.error('Error:', JSON.stringify(error));
+            console.error('💥 Feedback submission failed:', JSON.stringify(error));
             this.showToast('Error', error.body?.message || 'Submission failed', 'error');
         })
         .finally(() => {
@@ -313,12 +412,9 @@ export default class EmployeeQuestionAnswer extends LightningElement {
                     }
                 }
                 
-                // For star ratings, if we stored a number, format for employee view (stars)
+                // For rating questions, format for employee view (proper icons)
                 if (q.isRating && answerMap[q.id]) {
-                    const starCount = parseInt(answerMap[q.id]);
-                    if (!isNaN(starCount) && starCount >= 1 && starCount <= 5) {
-                        displayAnswer = '⭐'.repeat(starCount);
-                    }
+                    displayAnswer = this.formatRatingForDisplay(answerMap[q.id], q.scaleOptions);
                 }
                 
                 return {

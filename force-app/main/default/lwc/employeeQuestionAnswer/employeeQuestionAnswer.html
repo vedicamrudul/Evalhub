@@ -1,4 +1,5 @@
 <template>
+    <!-- <lightning-button label="Send Email" onclick={handleSendEmailOnFeedbackSubmit}></lightning-button> -->
     <div class="container slds-p-around_medium">
         <!-- Loading State -->
         <template if:true={isLoading}>
@@ -142,11 +143,13 @@
             </template>
         </template>
         </template>
+     <template if:false={isLoading}>
         <template if:false={feedbackData.formExists}>
             <div class="form-not-exist-message">
                 A form has not yet been created for this month.
                 Kindly come back later.
             </div>
         </template>
+    </template>
     </div>
 </template>

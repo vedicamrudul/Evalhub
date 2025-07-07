@@ -206,7 +206,7 @@ public static String decodeStarResponseForManager(String storedResponse) {
             try {
                 Integer ratingCount = Integer.valueOf(ratingValue);
                 if (ratingCount >= 1 && ratingCount <= 5) {
-                    return ratingCount + ' out of 5';
+                    return ratingCount + '/5';
                 }
             } catch (Exception e) {
                 // If rating value is not a number, fall through to backwards compatibility
@@ -218,7 +218,7 @@ public static String decodeStarResponseForManager(String storedResponse) {
     try {
         Integer starCount = Integer.valueOf(storedResponse);
         if (starCount >= 1 && starCount <= 5) {
-            return starCount + ' out of 5';
+            return starCount + '/5';
         }
     } catch (Exception e) {
         // If not a number, return as-is for backwards compatibility
@@ -460,42 +460,12 @@ Feedback_Form__c form = forms[0];
         employeeResponseMap.put(res.Question_Lookup__c, res);
     }
     
-    // Prepare question data with answers if they exist
+    // Prepare simplified question data with answers - only what's needed for display
     for (Feedback_Question__c question : formQuestions) {
         Map<String, Object> qData = new Map<String, Object>{
             'id' => question.Id,
-            'questionText' => question.Question_Text__c,
-            'inputType' => question.Input_Type__c,
-            'picklistValues' => question.Picklist_Values__c
+            'questionText' => question.Question_Text__c
         };
-        
-        // Handle scale-based input types
-        if (question.Input_Type__c == 'Rating' || question.Input_Type__c == 'Emoji') {
-            String scaleGroup = question.Picklist_Values__c; // Scale group stored in picklistValues field
-            if (String.isNotBlank(scaleGroup)) {
-                List<Map<String, Object>> scaleOptions = getScaleConfigurationsForGroup(question.Input_Type__c, scaleGroup);
-                qData.put('scaleOptions', scaleOptions);
-                qData.put('scaleGroup', scaleGroup);
-            }
-        } else if (question.Input_Type__c == 'Slider') {
-            // Slider is 1-10 scale, no metadata needed
-            qData.put('sliderMin', 1);
-            qData.put('sliderMax', 10);
-        } else if (question.Input_Type__c == 'Picklist') {
-            // Handle both custom and metadata-driven picklists
-            String picklistData = question.Picklist_Values__c;
-            if (picklistData == 'Work_Energy' || picklistData == 'Levels') {
-                // Metadata-driven picklist
-                List<Map<String, Object>> picklistOptions = getScaleConfigurationsForGroup('picklist', picklistData);
-                qData.put('picklistOptions', picklistOptions);
-                qData.put('isMetadataPicklist', true);
-                qData.put('picklistGroup', picklistData);
-            } else {
-                // Custom picklist values
-                qData.put('picklistValues', picklistData);
-                qData.put('isMetadataPicklist', false);
-            }
-        }
         
         if (employeeResponseMap.containsKey(question.Id)) {
             String storedAnswer = employeeResponseMap.get(question.Id).Rating_Answer__c;

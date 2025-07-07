@@ -130,9 +130,8 @@ export default class ViewResponsesPage extends NavigationMixin(LightningElement)
         
         switch (inputType) {
             case 'Rating':
-                // Admin/Manager view shows text format only (no stars)
-                // The answer should already be formatted as "X out of 5" from Apex
-                return answer;
+                // Parse metadata reference or direct number for admin view
+                return this.formatRatingForAdmin(answer);
             case 'Slider':
                 return `${answer}/10`;
             case 'Emoji':
@@ -144,6 +143,33 @@ export default class ViewResponsesPage extends NavigationMixin(LightningElement)
             default:
                 return answer;
         }
+    }
+
+    formatRatingForAdmin(answer) {
+        // Check if it's a metadata reference format: rating//scaleGroup//value
+        if (answer && answer.startsWith('rating//')) {
+            const parts = answer.split('//');
+            if (parts.length === 3) {
+                const ratingValue = parseInt(parts[2]);
+                if (!isNaN(ratingValue) && ratingValue >= 1 && ratingValue <= 5) {
+                    return `${ratingValue}/5`;
+                }
+            }
+        }
+        
+        // Backwards compatibility: if it's just a number
+        const ratingValue = parseInt(answer);
+        if (!isNaN(ratingValue) && ratingValue >= 1 && ratingValue <= 5) {
+            return `${ratingValue}/5`;
+        }
+        
+        // If it's already formatted (like "4 out of 5"), return as-is
+        if (answer.includes('out of')) {
+            return answer.replace('out of', '/');
+        }
+        
+        // If we can't parse it, return as-is
+        return answer;
     }
 
     // Apply filters based on search term and selected view

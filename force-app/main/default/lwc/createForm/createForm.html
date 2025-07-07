@@ -125,6 +125,48 @@
                                     </lightning-combobox>
                                 </div>
                             </template>
+
+                            <!-- Preview Section -->
+                            <template if:true={question.previewData.showPreview}>
+                                <div class="slds-col slds-size_1-of-1 slds-p-top_medium">
+                                    <div class="preview-section">
+                                        <div class="preview-header">
+                                            <lightning-icon icon-name="utility:preview" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                                            <span class="preview-title">Preview - How it will appear to users:</span>
+                                        </div>
+                                        <div class="preview-content">
+                                            <!-- Emoji Preview -->
+                                            <template if:true={question.previewData.isEmoji}>
+                                                <div class="emoji-preview-container">
+                                                    <label class="preview-label">How satisfied are you?</label>
+                                                    <div class="emoji-preview">
+                                                        <template for:each={question.previewData.options} for:item="option">
+                                                            <div key={option.value} class="emoji-preview-button">
+                                                                <span class="emoji-icon">{option.value}</span>
+                                                                <span class="emoji-label">{option.label}</span>
+                                                            </div>
+                                                        </template>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                            
+                                            <!-- Rating Preview -->
+                                            <template if:true={question.previewData.isRating}>
+                                                <div class="rating-preview-container">
+                                                    <label class="preview-label">Please select your rating</label>
+                                                    <div class="rating-preview">
+                                                        <template for:each={question.previewData.options} for:item="option">
+                                                            <div key={option.value} class="rating-preview-button">
+                                                                {option.label}
+                                                            </div>
+                                                        </template>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
                             
                             <template if:true={question.showPicklistValues}>
                                 <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-top_medium">

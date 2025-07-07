@@ -209,6 +209,7 @@ lightning-input, lightning-combobox {
     display: flex;
     gap: 0.5rem;
     margin-top: 0.5rem;
+    justify-content: center;
 }
 
 .star-button {
@@ -243,38 +244,64 @@ lightning-input, lightning-combobox {
 
 .emoji-rating {
     display: flex;
-    gap: 0.75rem;
+    gap: 1rem;
     margin-top: 0.5rem;
     justify-content: center;
+    flex-wrap: wrap;
 }
 
 .emoji-button {
-    background: none;
+    background: #f9fafb;
     border: 2px solid #e5e7eb;
     padding: 0.75rem;
     font-size: 2rem;
     cursor: pointer;
-    border-radius: 50%;
+    border-radius: 12px;
     transition: all 0.3s ease;
     width: 4rem;
     height: 4rem;
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .emoji-button:hover {
     border-color: #3b82f6;
-    background-color: #eff6ff;
-    transform: scale(1.1);
+    background: #eff6ff;
+    transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
 }
 
 .emoji-button.selected {
-    background-color: #3b82f6;
+    background: #3b82f6;
     border-color: #2563eb;
-    transform: scale(1.15);
+    transform: translateY(-2px) scale(1.05);
     box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+}
+
+/* Add tooltip-like effect for emoji labels */
+.emoji-button::after {
+    content: attr(data-label);
+    position: absolute;
+    bottom: -2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    z-index: 10;
+}
+
+.emoji-button:hover::after {
+    opacity: 1;
 }
 
 /* Slider Rating Styles */

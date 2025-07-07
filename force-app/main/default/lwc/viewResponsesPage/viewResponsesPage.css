@@ -200,6 +200,50 @@
     color: #333;
 }
 
+/* Table Cell Width and Text Wrapping */
+.slds-table th,
+.slds-table td {
+    max-width: 200px;
+    word-wrap: break-word;
+    word-break: break-word;
+    white-space: normal !important;
+    vertical-align: top;
+}
+
+/* Specific column widths */
+.slds-table th:first-child,
+.slds-table td:first-child {
+    max-width: 150px;
+    min-width: 120px;
+}
+
+.slds-table th:nth-child(2),
+.slds-table td:nth-child(2) {
+    max-width: 100px;
+    min-width: 80px;
+}
+
+/* Question columns */
+.slds-table th:not(:first-child):not(:nth-child(2)):not(:last-child),
+.slds-table td:not(:first-child):not(:nth-child(2)):not(:last-child) {
+    max-width: 180px;
+    min-width: 120px;
+}
+
+/* Manager feedback column (last column) */
+.slds-table th:last-child,
+.slds-table td:last-child {
+    max-width: 250px;
+    min-width: 150px;
+}
+
+/* Ensure truncate elements can wrap */
+.slds-truncate {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+}
+
 /* Custom Data Table Structure */
 .custom-table-container {
     overflow-x: auto;
