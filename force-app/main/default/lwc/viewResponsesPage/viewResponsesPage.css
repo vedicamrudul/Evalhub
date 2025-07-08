@@ -214,7 +214,7 @@
 .slds-table th:first-child,
 .slds-table td:first-child {
     max-width: 150px;
-    min-width: 120px;
+    min-width: 1250px;
 }
 
 .slds-table th:nth-child(2),
@@ -242,6 +242,12 @@
     white-space: normal !important;
     overflow: visible !important;
     text-overflow: clip !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+
 }
 
 /* Custom Data Table Structure */

@@ -606,7 +606,7 @@ public static Map<String, Object> getAllUserResponsesForAdmin(Id formId) {
 
     // Get the form details
     Feedback_Form__c form = [
-        SELECT Id,Title__c, Name, Department__c 
+        SELECT Id,Title__c, Name, department__c 
         FROM Feedback_Form__c 
         WHERE Id = :formId
         LIMIT 1
@@ -629,7 +629,7 @@ public static Map<String, Object> getAllUserResponsesForAdmin(Id formId) {
     String formDepartment = form.Department__c;
     
     List<User> allUsers = [
-        SELECT Id, Name, Department, UserRole.Name
+        SELECT Id, Name, department__c, UserRole.Name
         FROM User
         WHERE Id != :currentUser.Id
        AND department__c = :formDepartment
@@ -692,14 +692,14 @@ public static Map<String, Object> getAllUserResponsesForAdmin(Id formId) {
     // Build final user response structure
     for (User u : allUsers) {
         // Skip system users or users without proper data
-        if (u.Department == null || u.Name == null || u.Name.contains('Automated Process') || u.Name.contains('Integration User')) {
+        if (u.department__c == null || u.Name == null || u.Name.contains('Automated Process') || u.Name.contains('Integration User')) {
             continue;
         }
         
         Map<String, Object> userData = new Map<String, Object>{
             'userId' => u.Id,
             'userName' => u.Name,
-            'department' => u.Department,
+            'department' => u.department__c,
             'role' => u.UserRole?.Name,
             'managerResponse' => managerResponseMap.containsKey(u.Id) ? managerResponseMap.get(u.Id) : null,
             'hasManagerResponse' => managerResponseMap.containsKey(u.Id)
