@@ -214,7 +214,7 @@
 .slds-table th:first-child,
 .slds-table td:first-child {
     max-width: 150px;
-    min-width: 1250px;
+    min-width: 120px;
 }
 
 .slds-table th:nth-child(2),
