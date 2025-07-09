@@ -35,7 +35,11 @@ export default class CreateForm extends LightningElement {
 
     async loadInputTypesMetadata() {
         try {
+            
             const metadataResult = await getInputTypesFromMetadata();
+            console.log('metadataResult', metadataResult);
+            console.log('metadataResult.inputTypeOptions', metadataResult.inputTypeOptions);
+            console.log('this is wehre we are')
             this.inputTypeOptions = metadataResult.inputTypeOptions;
             this.scaleConfigurations = metadataResult.scaleConfigurations;
             this.picklistGroups = metadataResult.picklistGroups || [];
@@ -257,6 +261,31 @@ export default class CreateForm extends LightningElement {
     }
     
     handleSubmit() {
+        // Validate all questions before processing
+        const invalidQuestions = this.questions.filter(q => q.questionText.length > 255 );
+        const invalidPicklistValues = this.questions.filter(q => q.picklistValues && q.picklistValues.length > 100);
+
+        if (invalidPicklistValues.length > 0) {
+            this.dispatchEvent(
+                new ShowToastEvent({
+                    title: 'Error',
+                    message: 'One or more picklist values exceed the 100 character limit. Please shorten them before submitting.',
+                    variant: 'error'
+                })
+            );
+            return; // Stop submission entirely
+        }
+        if (invalidQuestions.length > 0) {
+            this.dispatchEvent(
+                new ShowToastEvent({
+                    title: 'Error',
+                    message: 'One or more questions exceed the 255 character limit. Please shorten them before submitting.',
+                    variant: 'error'
+                })
+            );
+            return; // Stop submission entirely
+        }
+
         // Prepare the data for the Apex method
         const formWrapper = {
             title: this.formDetails.title,

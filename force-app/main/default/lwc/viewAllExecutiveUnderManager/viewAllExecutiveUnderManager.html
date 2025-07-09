@@ -1,180 +1,180 @@
 <template>
-	<lightning-card title="Executives Under Current Manager" icon-name="standard:user">
-		<div class="slds-m-around_medium">
-			<template if:true={isLoading}>
-				<lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
-			</template>
+  <lightning-card title="Executives Under Current Manager" icon-name="standard:user">
+    <div class="slds-m-around_medium">
+      <template if:true={isLoading}>
+        <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+      </template>
 
-			<template if:true={error}>
-				<div class="slds-text-color_error">
-					Error loading data: {error}
-				</div>
-			</template>
+      <template if:true={error}>
+        <div class="slds-text-color_error">
+          Error loading data: {error}
+        </div>
+      </template>
 
-			<template if:true={hasUsers}>
-				<div class="employee-list">
-					<template for:each={displayUsers} for:item="displayUser">
-						<div key={displayUser.user.Id} class="employee-container slds-m-bottom_small">
-							<!-- Employee Row -->
-							<div class="employee-row slds-grid slds-grid_vertical-align-center slds-p-around_small">
-								<div class="slds-col slds-size_6-of-12">
-									<div class="slds-text-heading_small">{displayUser.user.Name}</div>
-								</div>
-								<div class="slds-col slds-size_4-of-12">
-									<!-- Optional additional info about the employee -->
-								</div>
-								<div class="slds-col slds-size_2-of-12 slds-text-align_right">
-									<lightning-button label="View" variant="brand" data-id={displayUser.user.Id}
-										onclick={handleViewClick}>
-									</lightning-button>
-								</div>
-							</div>
+      <template if:true={hasUsers}>
+        <div class="employee-list">
+          <template for:each={displayUsers} for:item="displayUser">
+            <div key={displayUser.user.Id} class="employee-container slds-m-bottom_small">
+              <!-- Employee Row -->
+              <div class="employee-row slds-grid slds-grid_vertical-align-center slds-p-around_small">
+                <div class="slds-col slds-size_6-of-12">
+                  <div class="slds-text-heading_small">{displayUser.user.Name}</div>
+                </div>
+                <div class="slds-col slds-size_4-of-12">
+                  <!-- Optional additional info about the employee -->
+                </div>
+                <div class="slds-col slds-size_2-of-12 slds-text-align_right">
+                  <lightning-button label={displayUser.isView} variant="brand" data-id={displayUser.user.Id}
+                    onclick={handleViewClick}>
+                  </lightning-button>
+                </div>
+              </div>
 
-							<!-- Expanded View - controlled by CSS class -->
-							<div class={displayUser.expandedClass}>
-								<div class="responses-container slds-p-around_medium">
-									<div class="slds-grid slds-gutters">
-										<!-- Employee Response Column -->
-										<div class="slds-col slds-size_1-of-2">
-											<div class="response-section">
-												<div class="section-title slds-text-heading_small slds-p-bottom_x-small">
-													Employee Response
-												</div>
-												<div class="section-content slds-p-around_medium">
-													<template if:true={displayUser.hasResponseData}>
-														<template if:true={displayUser.hasEmployeeSubmitted}>
-															<template for:each={displayUser.questions} for:item="question">
-																<div key={question.id} class="question-item">
-																	<div class="question-text">{question.questionText}
-																	</div>
-																	<template if:true={question.hasResponse}>
-																		<div class="answer-text">
-																			{question.answer}
-																		</div>
-																	</template>
-																	<template if:false={question.hasResponse}>
-																		<div class="no-response">
-																			No response provided
-																		</div>
-																	</template>
-																</div>
-															</template>
-														</template>
-														<template if:false={displayUser.formExists}>
-															<div class="slds-text-body_regular slds-text-color_weak">
-																Form doesn't exist for the department for the current month.
-															</div>
-														</template>
-														<template if:true={displayUser.formExists}>
-															<template if:false={displayUser.hasEmployeeSubmitted}>
-																<div class="slds-text-body_regular slds-text-color_weak">
-																	This employee has not submitted any feedback yet.
-																</div>
-															</template>
-														</template>
-													</template>
-													<template if:false={displayUser.hasResponseData}>
-														<div class="slds-text-body_regular slds-text-color_weak">
-															Loading employee responses...
-														</div>
-													</template>
-												</div>
-											</div>
-										</div>
+              <!-- Expanded View - controlled by CSS class -->
+              <div class={displayUser.expandedClass}>
+                <div class="responses-container slds-p-around_medium">
+                  <div class="slds-grid slds-gutters">
+                    <!-- Employee Response Column -->
+                    <div class="slds-col slds-size_1-of-2">
+                      <div class="response-section">
+                        <div class="section-title slds-text-heading_small slds-p-bottom_x-small">
+                          Employee Response
+                        </div>
+                        <div class="section-content slds-p-around_medium">
+                          <template if:true={displayUser.hasResponseData}>
+                            <template if:true={displayUser.hasEmployeeSubmitted}>
+                              <template for:each={displayUser.questions} for:item="question">
+                                <div key={question.id} class="question-item">
+                                  <div class="question-text">{question.questionText}
+                                  </div>
+                                  <template if:true={question.hasResponse}>
+                                    <div class="answer-text">
+                                      {question.answer}
+                                    </div>
+                                  </template>
+                                  <template if:false={question.hasResponse}>
+                                    <div class="no-response">
+                                      No response provided
+                                    </div>
+                                  </template>
+                                </div>
+                              </template>
+                            </template>
+                            <template if:false={displayUser.formExists}>
+                              <div class="slds-text-body_regular slds-text-color_weak">
+                                Form doesn't exist for the department for the current month.
+                              </div>
+                            </template>
+                            <template if:true={displayUser.formExists}>
+                              <template if:false={displayUser.hasEmployeeSubmitted}>
+                                <div class="slds-text-body_regular slds-text-color_weak">
+                                  This employee has not submitted any feedback yet.
+                                </div>
+                              </template>
+                            </template>
+                          </template>
+                          <template if:false={displayUser.hasResponseData}>
+                            <div class="slds-text-body_regular slds-text-color_weak">
+                              Loading employee responses...
+                            </div>
+                          </template>
+                        </div>
+                      </div>
+                    </div>
 
-										<!-- Manager Response Column -->
-										<div class="slds-col slds-size_1-of-2">
-											<div class="response-section">
-												<div class="section-title slds-text-heading_small slds-p-bottom_x-small">
-													Manager Response
-												</div>
-												<div class="section-content slds-p-around_medium">
-													<template if:true={displayUser.hasResponseData}>
-														<!-- Check if form exists -->
-														<template if:true={displayUser.formExists}>
-															<!-- Manager has submitted feedback -->
-															<template if:false={displayUser.hasEmployeeSubmitted}>
-																<div class="slds-text-body_regular slds-text-color_weak">
-																	Please wait for the employee to submit their feedback.
-																</div>
-															</template>
-															<template if:true={displayUser.hasEmployeeSubmitted}>
-																<template if:true={displayUser.hasManagerSubmitted}>
-																	<div class="slds-text-body_regular slds-m-bottom_small">
-																		You have submitted feedback for this employee.
-																	</div>
-																	<div class="slds-box slds-theme_shade slds-m-top_x-small">
-																		<div class="slds-text-heading_small slds-m-bottom_x-small">
-																			Your Feedback:</div>
-																		<div class="slds-text-body_regular">
-																			{displayUser.managerResponseText}</div>
-																	</div>
-																</template>
+                    <!-- Manager Response Column -->
+                    <div class="slds-col slds-size_1-of-2">
+                      <div class="response-section">
+                        <div class="section-title slds-text-heading_small slds-p-bottom_x-small">
+                          Manager Response
+                        </div>
+                        <div class="section-content slds-p-around_medium">
+                          <template if:true={displayUser.hasResponseData}>
+                            <!-- Check if form exists -->
+                            <template if:true={displayUser.formExists}>
+                              <!-- Manager has submitted feedback -->
+                              <template if:false={displayUser.hasEmployeeSubmitted}>
+                                <div class="slds-text-body_regular slds-text-color_weak">
+                                  Please wait for the employee to submit their feedback.
+                                </div>
+                              </template>
+                              <template if:true={displayUser.hasEmployeeSubmitted}>
+                                <template if:true={displayUser.hasManagerSubmitted}>
+                                  <div class="slds-text-body_regular slds-m-bottom_small">
+                                    You have submitted feedback for this employee.
+                                  </div>
+                                  <div class="slds-box slds-theme_shade slds-m-top_x-small">
+                                    <div class="slds-text-heading_small slds-m-bottom_x-small">
+                                      Your Feedback:</div>
+                                    <div class="slds-text-body_regular">
+                                      {displayUser.managerResponseText}</div>
+                                  </div>
+                                </template>
 
-																<!-- Manager has not submitted feedback -->
-																<template if:false={displayUser.hasManagerSubmitted}>
-																	<!-- Show feedback button or form based on state -->
-																	<template if:true={displayUser.showFeedbackForm}>
-																		<div class="slds-form-element">
-																			<label class="slds-form-element__label">Your
-																				Feedback</label>
-																			<div class="slds-form-element__control">
-																				<lightning-textarea name="feedback" data-id={displayUser.user.Id}
-																					value={displayUser.feedbackText} onchange={handleFeedbackChange}
-																					placeholder="Enter your feedback for this employee"
-																					class="slds-m-bottom_small">
-																				</lightning-textarea>
-																			</div>
-																		</div>
+                                <!-- Manager has not submitted feedback -->
+                                <template if:false={displayUser.hasManagerSubmitted}>
+                                  <!-- Show feedback button or form based on state -->
+                                  <template if:true={displayUser.showFeedbackForm}>
+                                    <div class="slds-form-element">
+                                      <label class="slds-form-element__label">Your
+                                        Feedback</label>
+                                      <div class="slds-form-element__control">
+                                        <lightning-textarea name="feedback" data-id={displayUser.user.Id}
+                                          value={displayUser.feedbackText} onchange={handleFeedbackChange}
+                                          placeholder="Enter your feedback for this employee"
+                                          class="slds-m-bottom_small">
+                                        </lightning-textarea>
+                                      </div>
+                                    </div>
 
-																		<div class="slds-grid slds-grid_align-end">
-																			<lightning-button label="Cancel" variant="neutral" data-id={displayUser.user.Id}
-																				onclick={handleCancelFeedback} class="slds-m-right_x-small">
-																			</lightning-button>
+                                    <div class="slds-grid slds-grid_align-end">
+                                      <lightning-button label="Cancel" variant="neutral" data-id={displayUser.user.Id}
+                                        onclick={handleCancelFeedback} class="slds-m-right_x-small">
+                                      </lightning-button>
 
-																			<lightning-button label="Submit" variant="brand" data-id={displayUser.user.Id}
-																				onclick={handleSubmitFeedback} disabled={displayUser.isSubmitting}>
-																			</lightning-button>
-																		</div>
-																	</template>
+                                      <lightning-button label="Submit" variant="brand" data-id={displayUser.user.Id}
+                                        onclick={handleSubmitFeedback} disabled={displayUser.isSubmitting}>
+                                      </lightning-button>
+                                    </div>
+                                  </template>
 
-																	<template if:false={displayUser.showFeedbackForm}>
-																		<lightning-button label="Submit Your Feedback" variant="brand"
-																			data-id={displayUser.user.Id} onclick={handleShowFeedbackInput}>
-																		</lightning-button>
-																	</template>
-																</template>
-															</template>
-														</template>
-														<template if:false={displayUser.formExists}>
-															<div class="slds-text-body_regular slds-text-color_weak">
-																Form doesn't exist for the department for the current month.
-															</div>
-														</template>
-													</template>
+                                  <template if:false={displayUser.showFeedbackForm}>
+                                    <lightning-button label="Submit Your Feedback" variant="brand"
+                                      data-id={displayUser.user.Id} onclick={handleShowFeedbackInput}>
+                                    </lightning-button>
+                                  </template>
+                                </template>
+                              </template>
+                            </template>
+                            <template if:false={displayUser.formExists}>
+                              <div class="slds-text-body_regular slds-text-color_weak">
+                                Form doesn't exist for the department for the current month.
+                              </div>
+                            </template>
+                          </template>
 
 
-													<template if:false={displayUser.hasResponseData}>
-														<div class="slds-text-body_regular slds-text-color_weak">
-															Loading manager response status...
-														</div>
-													</template>
-												</div>
-											</div>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-					</template>
-				</div>
-			</template>
+                          <template if:false={displayUser.hasResponseData}>
+                            <div class="slds-text-body_regular slds-text-color_weak">
+                              Loading manager response status...
+                            </div>
+                          </template>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+      </template>
 
-			<template if:false={hasUsers}>
-				<div class="slds-p-around_medium slds-text-align_center">
-					No executives found under your management.
-				</div>
-			</template>
-		</div>
-	</lightning-card>
+      <template if:false={hasUsers}>
+        <div class="slds-p-around_medium slds-text-align_center">
+          No executives found under your management.
+        </div>
+      </template>
+    </div>
+  </lightning-card>
 </template>

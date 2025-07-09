@@ -11,6 +11,7 @@ export default class ViewAllExecutiveUnderManager extends LightningElement {
     @track managerFeedbackText = {};
     @track isSubmitting = {};
     @track formExists= {};
+
     error;
     isLoading = true;
     
@@ -21,7 +22,8 @@ export default class ViewAllExecutiveUnderManager extends LightningElement {
             this.users = data.map(user => ({
                 ...user,
                 RoleName: user.UserRole ? user.UserRole.Name : '',
-                expanded: false
+                expanded: false,
+                isView: 'View'
             }));
             this.error = undefined;
         } else if (error) {
@@ -47,6 +49,7 @@ export default class ViewAllExecutiveUnderManager extends LightningElement {
             return {
                 user: user,
                 expandedClass: isExpanded ? 'expanded-view' : 'collapsed-view',
+                isView: user.isView,
                 hasResponseData: !!responseData,
                 hasEmployeeSubmitted: responseData ? responseData.hasEmployeeSubmitted : false,
                 hasManagerSubmitted: responseData ? responseData.hasManagerSubmitted : false,
@@ -67,13 +70,14 @@ export default class ViewAllExecutiveUnderManager extends LightningElement {
         this.users = this.users.map(user => {
             if (user.Id === userId) {
                 const newExpandedState = !user.expanded;
-                
+                user.isView = user.isView === 'View' ? 'Hide' : 'View';
+
                 // If expanding and we don't have the responses yet, fetch them
                 if (newExpandedState && !this.userResponses[userId]) {
                     this.fetchEmployeeResponses(userId);
                 }
                 
-                return {...user, expanded: newExpandedState};
+                return {...user, expanded: newExpandedState, isView: user.isView};
             }
             return user;
         });
@@ -143,6 +147,11 @@ export default class ViewAllExecutiveUnderManager extends LightningElement {
         if (!feedbackText || feedbackText.trim() === '') {
             this.showToast('Error', 'Please enter feedback before submitting', 'error');
             return;
+        }else{
+            if(feedbackText.length > 500){
+                this.showToast('Error', 'Feedback must be less than 500 characters', 'error');
+                return;
+            }
         }
         
         // Set submitting state

@@ -203,11 +203,13 @@
 /* Table Cell Width and Text Wrapping */
 .slds-table th,
 .slds-table td {
-    max-width: 200px;
+    /* max-width: 200px; */
     word-wrap: break-word;
     word-break: break-word;
     white-space: normal !important;
     vertical-align: top;
+    /* background-color: #b4ffa7; */
+    /* max- */
 }
 
 /* Specific column widths */
@@ -215,26 +217,30 @@
 .slds-table td:first-child {
     max-width: 150px;
     min-width: 120px;
+    /* background-color: #8a8a8a; */
 }
 
 .slds-table th:nth-child(2),
 .slds-table td:nth-child(2) {
     max-width: 100px;
     min-width: 80px;
+    /* background-color: #ffa7f2; */
 }
 
 /* Question columns */
 .slds-table th:not(:first-child):not(:nth-child(2)):not(:last-child),
 .slds-table td:not(:first-child):not(:nth-child(2)):not(:last-child) {
-    max-width: 180px;
-    min-width: 120px;
+    max-width: 700px;
+    min-width: 200px;
+    /* background-color: #b1a55c; */
 }
 
 /* Manager feedback column (last column) */
 .slds-table th:last-child,
 .slds-table td:last-child {
     max-width: 250px;
-    min-width: 150px;
+    min-width: 200px;
+    /* background-color: #fa9393; - this was for testing */
 }
 
 /* Ensure truncate elements can wrap */

@@ -68,8 +68,8 @@
                                 <p class="question-text"><strong>{question.questionText}</strong></p>
 
                                 <template if:true={question.isText}>
-                                    <lightning-input type="text" label="Answer" data-id={question.id}
-                                        required></lightning-input>
+                                    <lightning-textarea  label="Answer" data-id={question.id}
+                                        required></lightning-textarea>
                                 </template>
 
                                 <template if:true={question.isRating}>

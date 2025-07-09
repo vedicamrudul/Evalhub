@@ -210,8 +210,8 @@ export default class EmployeeQuestionAnswer extends LightningElement {
     handleSubmit() {
         this.isSubmitting = true;
         
-        // Get all answers
-        const inputs = this.template.querySelectorAll('lightning-input[data-id]');
+        // Get all answers - fixed to properly select textareas
+        const textareas = this.template.querySelectorAll('lightning-textarea[data-id]');
         const comboboxes = this.template.querySelectorAll('lightning-combobox[data-id]');
         const starRatings = this.template.querySelectorAll('.star-rating[data-id]');
         const emojiRatings = this.template.querySelectorAll('.emoji-rating[data-id]');
@@ -220,13 +220,20 @@ export default class EmployeeQuestionAnswer extends LightningElement {
         const answers = [];
         let isValid = true;
         
-        // Process text inputs
-        inputs.forEach(input => {
-            const questionId = input.dataset.id;
-            const value = input.value;
+        // Process text inputs (textareas)
+        textareas.forEach(textarea => {
+            const questionId = textarea.dataset.id;
+            const value = textarea.value;
+            
+            if(value && value.length > 500){
+                this.showToast('Error', 'Answer must be less than 500 characters', 'error');
+                textarea.reportValidity();
+                isValid = false;
+                return;
+            }
             
             if (!value) {
-                input.reportValidity();
+                textarea.reportValidity();
                 isValid = false;
                 return;
             }

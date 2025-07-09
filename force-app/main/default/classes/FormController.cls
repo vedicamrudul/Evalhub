@@ -216,7 +216,7 @@ public static Map<String, Object> getInputTypesFromMetadata() {
     // Create input type options for form creation
     List<Map<String, String>> inputTypeOptions = new List<Map<String, String>>();
     inputTypeOptions.add(new Map<String, String>{'label' => 'Text', 'value' => 'Text'});
-    inputTypeOptions.add(new Map<String, String>{'label' => 'Slider', 'value' => 'Slider'});
+    // inputTypeOptions.add(new Map<String, String>{'label' => 'Slider', 'value' => 'Slider'});
 
     System.debug('inputTypeOptions: ' + inputTypeOptions);
     

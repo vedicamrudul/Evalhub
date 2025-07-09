@@ -157,6 +157,18 @@ lightning-input, lightning-combobox {
     margin-bottom: 0.75rem;
 }
 
+/* Make textarea taller */
+lightning-input[type="textarea"] textarea {
+    min-height: 120px !important;
+    resize: vertical;
+}
+
+/* Alternative approach - target all textareas */
+textarea {
+    min-height: 120px !important;
+    resize: vertical;
+}
+
 /* Answer text styling */
 .slds-m-top_x-small {
     background-color: white;
@@ -167,6 +179,8 @@ lightning-input, lightning-combobox {
     font-size: 1rem;
     line-height: 1.5;
 }
+
+
 
 /* Manager feedback styling - Fix for Salesforce LWC limitations */
 .manager-feedback-container {
