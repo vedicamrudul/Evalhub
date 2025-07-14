@@ -10,6 +10,15 @@ export default class ViewResponsesPage extends NavigationMixin(LightningElement)
     @track searchTerm = '';
     @track viewOption = 'all'; // all, submitted, pending, reviewed
     
+    // Branch filter properties for CBO users
+    @track selectedState = '';
+    @track selectedCity = '';
+    @track selectedBranch = '';
+    @track stateOptions = [];
+    @track cityOptions = [];
+    @track branchOptions = [];
+    @track isCBO = false;
+    
     // Options for the view filter
     viewOptions = [
         { label: 'All', value: 'all' },
@@ -54,6 +63,13 @@ export default class ViewResponsesPage extends NavigationMixin(LightningElement)
             .then(result => {
                 console.log('User responses received:', JSON.stringify(result));
                 this.formData = result;
+                this.isCBO = result.isCBO || false;
+                
+                // Process branch filtering options for CBO users
+                if (this.isCBO) {
+                    this.processBranchFilterOptions(result);
+                }
+                
                 this.processUserResponsesData();
                 this.applyFilters();
                 
@@ -70,6 +86,14 @@ export default class ViewResponsesPage extends NavigationMixin(LightningElement)
             .finally(() => {
                 this.isLoading = false;
             });
+    }
+    
+    // Process branch filter options for CBO users
+    processBranchFilterOptions(result) {
+        // Add "All" option to each filter
+        this.stateOptions = [{ label: 'All States', value: '' }, ...(result.stateOptions || [])];
+        this.cityOptions = [{ label: 'All Cities', value: '' }, ...(result.cityOptions || [])];
+        this.branchOptions = [{ label: 'All Branches', value: '' }, ...(result.branchOptions || [])];
     }
     
     // Process user responses data to add computed properties
@@ -192,6 +216,24 @@ export default class ViewResponsesPage extends NavigationMixin(LightningElement)
                 if (!matchesSearch) return false;
             }
             
+            // Apply branch filters for CBO users
+            if (this.isCBO) {
+                // State filter
+                if (this.selectedState && user.branch?.state !== this.selectedState) {
+                    return false;
+                }
+                
+                // City filter
+                if (this.selectedCity && user.branch?.city !== this.selectedCity) {
+                    return false;
+                }
+                
+                // Branch filter
+                if (this.selectedBranch && user.branch?.branchName !== this.selectedBranch) {
+                    return false;
+                }
+            }
+            
             // Apply view filter
             switch (this.viewOption) {
                 case 'submitted':
@@ -218,6 +260,68 @@ export default class ViewResponsesPage extends NavigationMixin(LightningElement)
         this.applyFilters();
     }
     
+    // Handle branch filter changes for CBO users
+    handleStateFilterChange(event) {
+        this.selectedState = event.detail.value;
+        // Reset dependent filters when state changes
+        this.selectedCity = '';
+        this.selectedBranch = '';
+        this.updateDependentFilters();
+        this.applyFilters();
+    }
+    
+    handleCityFilterChange(event) {
+        this.selectedCity = event.detail.value;
+        // Reset branch filter when city changes
+        this.selectedBranch = '';
+        this.updateDependentFilters();
+        this.applyFilters();
+    }
+    
+    handleBranchFilterChange(event) {
+        this.selectedBranch = event.detail.value;
+        this.applyFilters();
+    }
+    
+    // Update dependent filter options based on current selections
+    updateDependentFilters() {
+        if (!this.isCBO || !this.formData) return;
+        
+        const allUsers = this.formData.userResponses || [];
+        
+        // Update city options based on selected state
+        let availableCities = new Set();
+        allUsers.forEach(user => {
+            if (user.branch && (!this.selectedState || user.branch.state === this.selectedState)) {
+                if (user.branch.city) {
+                    availableCities.add(user.branch.city);
+                }
+            }
+        });
+        
+        this.cityOptions = [
+            { label: 'All Cities', value: '' },
+            ...Array.from(availableCities).map(city => ({ label: city, value: city }))
+        ];
+        
+        // Update branch options based on selected state and city
+        let availableBranches = new Set();
+        allUsers.forEach(user => {
+            if (user.branch && 
+                (!this.selectedState || user.branch.state === this.selectedState) &&
+                (!this.selectedCity || user.branch.city === this.selectedCity)) {
+                if (user.branch.branchName) {
+                    availableBranches.add(user.branch.branchName);
+                }
+            }
+        });
+        
+        this.branchOptions = [
+            { label: 'All Branches', value: '' },
+            ...Array.from(availableBranches).map(branch => ({ label: branch, value: branch }))
+        ];
+    }
+    
     // Clear error message
     clearError() {
         this.error = null;
@@ -235,6 +339,12 @@ export default class ViewResponsesPage extends NavigationMixin(LightningElement)
     
     // Refresh the data
     refreshData() {
+        // Reset branch filters for CBO users
+        if (this.isCBO) {
+            this.selectedState = '';
+            this.selectedCity = '';
+            this.selectedBranch = '';
+        }
         this.loadUserResponses();
     }
     
@@ -307,5 +417,18 @@ export default class ViewResponsesPage extends NavigationMixin(LightningElement)
             pending: users.filter(u => !u.hasSubmitted).length,
             reviewed: users.filter(u => u.hasManagerResponse).length
         };
+    }
+    
+    // Branch filter getters for CBO users
+    get stateFilterOptions() {
+        return this.stateOptions;
+    }
+    
+    get cityFilterOptions() {
+        return this.cityOptions;
+    }
+    
+    get branchFilterOptions() {
+        return this.branchOptions;
     }
 }

@@ -1,0 +1,104 @@
+<template>
+    <lightning-card title="Previous Evaluation Forms">
+        <div class="slds-p-around_medium">
+            <div class="slds-grid slds-gutters slds-m-bottom_medium">
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+                    <!-- <lightning-combobox 
+                        label="Filter by Department"
+                        class="filter-control"
+                        placeholder="Select Department"
+                        options={departmentOptionsList}
+                        value={department}
+                        onchange={handleDepartmentChange}>
+                    </lightning-combobox> -->
+                    <div> Department: {userData.department__c}</div>
+                </div>
+                <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-3">
+                    <lightning-combobox 
+                        label="Filter by Month"
+                        class="filter-control"
+                        placeholder="Select Month"
+                        options={monthOptionsList}
+                        value={selectedMonth}
+                        onchange={handleMonthChange}>
+                    </lightning-combobox>
+                </div>
+                <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-3">
+                    <lightning-combobox 
+                        label="Filter by Year"
+                        class="filter-control"
+                        placeholder="Select Year"
+                        options={yearOptionsList}
+                        value={selectedYear}
+                        onchange={handleYearChange}>
+                    </lightning-combobox>
+                </div>
+            </div>
+            
+            <div class="filter-actions slds-m-bottom_medium">
+                <lightning-button 
+                    label="Apply Filters" 
+                    variant="brand" 
+                    onclick={applyFilters}
+                    class="slds-m-right_small">
+                </lightning-button>
+                <lightning-button 
+                    label="Reset Filters" 
+                    variant="neutral" 
+                    onclick={resetFilters}>
+                </lightning-button>
+            </div>
+            
+            <div class="forms-container">
+                <template if:true={isLoading}>
+                    <div class="slds-is-relative slds-p-around_medium">
+                        <lightning-spinner alternative-text="Loading forms" size="medium"></lightning-spinner>
+                    </div>
+                </template>
+                
+                <template if:false={isLoading}>
+                    <template if:true={hasFilteredForms}>
+                        <template for:each={filteredForms} for:item="form">
+                            <div key={form.Id} class="form-card slds-box slds-m-bottom_small">
+                                <div class="slds-grid slds-wrap">
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12">
+                                        <div class="slds-text-heading_small form-title">{form.Title__c}</div>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12 slds-text-align_right">
+                                        <lightning-button 
+                                            label="View My Response" 
+                                            data-id={form.Id}
+                                            variant="neutral" 
+                                            icon-name="utility:preview" 
+                                            onclick={handleViewMyResponse}
+                                            class="slds-m-right_small">
+                                        </lightning-button>
+                                    </div>
+                                   
+                                    <div class="slds-col slds-size_1-of-2 slds-medium-size_3-of-12">
+                                        <div class="slds-text-title form-label">Date:</div>
+                                        <div>
+                                            <span class="month-display">{form._monthName}</span>
+                                            <span class="year-display">{form._year}</span>
+                                        </div>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2 slds-medium-size_3-of-12">
+                                        <div class="slds-text-title form-label">Department:</div>
+                                        <div>{userData.department__c}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </template>
+                    
+                    <template if:false={hasFilteredForms}>
+                        <div class="slds-text-align_center slds-p-around_medium empty-state">
+                            <lightning-icon icon-name="utility:filterList" size="medium" class="slds-m-bottom_small"></lightning-icon>
+                            <p>{noFormsMessage}</p>
+                        </div>
+                    </template>
+                </template>
+            </div>
+        </div>
+    </lightning-card>
+</template>

@@ -1,7 +1,5 @@
 public with sharing class QuestionsController {
     
-    // ==================== INNER CLASSES ====================
-    
     public class QuestionAnswerPair {
         @AuraEnabled
         public String questionId { get; set; }
@@ -15,8 +13,6 @@ public with sharing class QuestionsController {
         @AuraEnabled
         public String employeeId { get; set; }
     }
-    
-    // ==================== UTILITY METHODS ====================
     
     private static User validateCurrentUser() {
         User currentUser = UserController.getCurrentUser();
@@ -36,8 +32,9 @@ public with sharing class QuestionsController {
         ];
         return forms.isEmpty() ? null : forms[0];
     }
-    
-    private static List<Feedback_Question__c> getQuestionsByFormId(Id formId) {
+
+    @AuraEnabled(cacheable=true)
+    public static List<Feedback_Question__c> getQuestionsByFormId(Id formId) {
         return [
             SELECT Id, Question_Text__c, Input_Type__c, Picklist_Values__c, Feedback_Form__c
             FROM Feedback_Question__c 
@@ -73,8 +70,6 @@ public with sharing class QuestionsController {
         return managerResponses.isEmpty() ? '' : managerResponses[0].Manager_Response_Test__c;
     }
     
-    // ==================== RESPONSE DECODING METHODS ====================
-    
     public static List<Map<String, Object>> getScaleConfigurationsForGroup(String inputType, String scaleGroup) {
         List<Input_Scale_Config__mdt> configs = [
             SELECT Label, Display_Label__c, Value_Stored__c, Order__c
@@ -96,30 +91,26 @@ public with sharing class QuestionsController {
         return result;
     }
     
-    // Consolidated decode method that handles both emoji and rating types for both views
     public static String decodeResponse(String storedResponse, String questionType, Boolean isEmployeeView) {
         if (String.isBlank(storedResponse)) {
             return '';
         }
         
-        // Handle emoji responses
         if (questionType == 'Emoji' && storedResponse.startsWith('emoji//')) {
             return decodeEmojiResponse(storedResponse, isEmployeeView);
         }
         
-        // Handle rating responses
         if (questionType == 'Rating') {
             return decodeRatingResponse(storedResponse, isEmployeeView);
         }
         
-        // Return as-is for other types
         return storedResponse;
     }
     
     private static String decodeEmojiResponse(String storedResponse, Boolean isEmployeeView) {
         List<String> parts = storedResponse.split('//');
         if (parts.size() != 3) {
-            return storedResponse; // Backwards compatibility
+            return storedResponse;
         }
         
         String scaleGroup = parts[1];
@@ -128,7 +119,7 @@ public with sharing class QuestionsController {
         List<Input_Scale_Config__mdt> configs = queryEmojiConfig(scaleGroup, label);
         
         if (configs.isEmpty()) {
-            return storedResponse; // Backwards compatibility
+            return storedResponse;
         }
         
         Input_Scale_Config__mdt config = configs[0];
@@ -138,7 +129,6 @@ public with sharing class QuestionsController {
     }
     
     private static List<Input_Scale_Config__mdt> queryEmojiConfig(String scaleGroup, String label) {
-        // Try matching by Label field first
         List<Input_Scale_Config__mdt> configs = [
             SELECT Value_Stored__c, Display_Label__c, Label
             FROM Input_Scale_Config__mdt
@@ -149,7 +139,6 @@ public with sharing class QuestionsController {
             LIMIT 1
         ];
         
-        // If not found, try matching by Display_Label__c field
         if (configs.isEmpty()) {
             configs = [
                 SELECT Value_Stored__c, Display_Label__c, Label
@@ -169,7 +158,6 @@ public with sharing class QuestionsController {
         Integer ratingValue = null;
         String scaleGroup = null;
         
-        // Check if it's metadata reference format: rating//scaleGroup//value
         if (storedResponse.startsWith('rating//')) {
             List<String> parts = storedResponse.split('//');
             if (parts.size() == 3) {
@@ -177,11 +165,10 @@ public with sharing class QuestionsController {
                 try {
                     ratingValue = Integer.valueOf(parts[2]);
                 } catch (Exception e) {
-                    return storedResponse; // Backwards compatibility
+                    return storedResponse;
                 }
             }
         } else {
-            // Backwards compatibility: if it's just a number
             try {
                 ratingValue = Integer.valueOf(storedResponse);
             } catch (Exception e) {
@@ -194,7 +181,7 @@ public with sharing class QuestionsController {
         }
         
         if (isEmployeeView) {
-            String icon = '⭐'; // Default icon
+            String icon = '⭐';
             if (String.isNotBlank(scaleGroup)) {
                 icon = getRatingIcon(scaleGroup);
             }
@@ -220,8 +207,6 @@ public with sharing class QuestionsController {
         }
         return '⭐';
     }
-    
-    // ==================== QUESTION DATA BUILDING METHODS ====================
     
     private static Map<String, Object> buildQuestionData(Feedback_Question__c question, String answer, Boolean hasResponse, Boolean isEmployeeView) {
         Map<String, Object> qData = new Map<String, Object>{
@@ -270,10 +255,8 @@ public with sharing class QuestionsController {
         }
     }
     
-    // ==================== MAIN PUBLIC METHODS ====================
-    
     @AuraEnabled(cacheable=true)
-    public static Map<String, Object> getFeedbackData() {
+    public static Map<String, Object> getFeedbackData(){
         User currentUser = validateCurrentUser();
         
         Feedback_Form__c form = getActiveFormByDepartment(currentUser.department__c);
@@ -427,6 +410,10 @@ public with sharing class QuestionsController {
     @AuraEnabled(cacheable=true)
     public static Map<String, Object> getAllUserResponsesForAdmin(Id formId) {
         validateCurrentUser();
+
+        Id currentUserId = UserInfo.getUserId();
+        User currentUser = [Select UserRole.Name from User where Id = :currentUserId];
+        System.debug('currentUser.UserRole.Name: ' + currentUser.UserRole.Name);
         
         Feedback_Form__c form = [
             SELECT Id, Title__c, Name, department__c 
@@ -441,21 +428,96 @@ public with sharing class QuestionsController {
         
         List<Feedback_Question__c> questions = getQuestionsByFormId(formId);
         
-        List<User> allUsers = [
-            SELECT Id, Name, department__c, UserRole.Name
-            FROM User
-            WHERE Id != :UserInfo.getUserId()
-            AND department__c = :form.Department__c
-        ];
+        // Get users with branch allocation data if CBO role
+        Map<String, Object> result = new Map<String, Object>();
+        result.put('currentUserRole', currentUser.UserRole.Name);
+        result.put('isCBO', currentUser.UserRole.Name == 'CBO');
         
-        Map<String, Object> result = buildAdminResponseData(form, questions, allUsers);
-        return result;
+        if(currentUser.UserRole.Name == 'CBO') {
+            // For CBO, get users with branch information
+            List<BranchUserAllocation__c> branchAllocations = [
+                SELECT User__r.Id, User__r.Name, User__r.department__c, User__r.UserRole.Name, 
+                       Branch__r.Name, Branch__r.State__c, Branch__r.City__c, Branch__r.Id
+                FROM BranchUserAllocation__c
+                WHERE User__r.Id != :UserInfo.getUserId()
+                AND User__r.department__c = :form.department__c
+            ];
+            
+            // Extract user IDs and create maps
+            Set<Id> userIds = new Set<Id>();
+            Map<Id, Map<String, String>> userBranchMap = new Map<Id, Map<String, String>>();
+            Set<String> allStates = new Set<String>();
+            Set<String> allCities = new Set<String>();
+            Set<String> allBranches = new Set<String>();
+            
+            for(BranchUserAllocation__c allocation : branchAllocations) {
+                userIds.add(allocation.User__r.Id);
+                
+                // Store branch information
+                userBranchMap.put(allocation.User__r.Id, new Map<String, String>{
+                    'branchId' => allocation.Branch__r.Id,
+                    'branchName' => allocation.Branch__r.Name,
+                    'state' => allocation.Branch__r.State__c,
+                    'city' => allocation.Branch__r.City__c
+                });
+                
+                // Collect unique values for filters
+                if(String.isNotBlank(allocation.Branch__r.State__c)) {
+                    allStates.add(allocation.Branch__r.State__c);
+                }
+                if(String.isNotBlank(allocation.Branch__r.City__c)) {
+                    allCities.add(allocation.Branch__r.City__c);
+                }
+                if(String.isNotBlank(allocation.Branch__r.Name)) {
+                    allBranches.add(allocation.Branch__r.Name);
+                }
+            }
+            
+            // Query users separately using the collected IDs
+            List<User> allUsers = [
+                SELECT Id, Name, department__c, UserRole.Name
+                FROM User
+                WHERE Id IN :userIds
+            ];
+            
+            // Add filter options to result
+            List<Map<String, String>> stateOptions = new List<Map<String, String>>();
+            for(String state : allStates) {
+                stateOptions.add(new Map<String, String>{'label' => state, 'value' => state});
+            }
+            
+            List<Map<String, String>> cityOptions = new List<Map<String, String>>();
+            for(String city : allCities) {
+                cityOptions.add(new Map<String, String>{'label' => city, 'value' => city});
+            }
+            
+            List<Map<String, String>> branchOptions = new List<Map<String, String>>();
+            for(String branch : allBranches) {
+                branchOptions.add(new Map<String, String>{'label' => branch, 'value' => branch});
+            }
+            
+            result.put('stateOptions', stateOptions);
+            result.put('cityOptions', cityOptions);
+            result.put('branchOptions', branchOptions);
+            result.put('userBranchMap', userBranchMap);
+            
+            return buildAdminResponseDataWithBranch(form, questions, allUsers, userBranchMap, result);
+        } else {
+            // Regular flow for non-CBO users
+            List<User> allUsers = [
+                SELECT Id, Name, department__c, UserRole.Name
+                FROM User
+                WHERE Id != :UserInfo.getUserId()
+                AND department__c = :form.department__c
+             ];
+            
+            return buildAdminResponseData(form, questions, allUsers);
+        }
     }
     
     private static Map<String, Object> buildAdminResponseData(Feedback_Form__c form, List<Feedback_Question__c> questions, List<User> allUsers) {
         Map<String, Object> result = new Map<String, Object>();
         
-        // Prepare questions structure
         List<Map<String, String>> questionList = new List<Map<String, String>>();
         for (Feedback_Question__c q : questions) {
             questionList.add(new Map<String, String>{
@@ -469,17 +531,77 @@ public with sharing class QuestionsController {
         result.put('questions', questionList);
         result.put('formName', form.Name);
         result.put('formTitle', form.Title__c);
-        result.put('formDepartment', form.Department__c);
+        result.put('formDepartment', form.department__c);
         
-        // Get all responses and manager responses
         Map<Id, Map<Id, String>> userQuestionResponseMap = getUserQuestionResponseMap(questions, allUsers);
         Map<Id, String> managerResponseMap = getManagerResponseMap(allUsers, form.Id);
         
-        // Build user responses
         List<Map<String, Object>> userResponses = buildUserResponsesList(allUsers, questions, userQuestionResponseMap, managerResponseMap);
         result.put('userResponses', userResponses);
         
         return result;
+    }
+
+    private static Map<String, Object> buildAdminResponseDataWithBranch(Feedback_Form__c form, List<Feedback_Question__c> questions, List<User> allUsers, Map<Id, Map<String, String>> userBranchMap, Map<String, Object> result) {
+        Map<String, Object> finalResult = new Map<String, Object>();
+        finalResult.putAll(result);
+
+        List<Map<String, String>> questionList = new List<Map<String, String>>();
+        for (Feedback_Question__c q : questions) {
+            questionList.add(new Map<String, String>{
+                'id' => q.Id,
+                'text' => q.Question_Text__c,
+                'type' => q.Input_Type__c,
+                'picklistValues' => q.Picklist_Values__c
+            });
+        }
+        
+        finalResult.put('questions', questionList);
+        finalResult.put('formName', form.Name);
+        finalResult.put('formTitle', form.Title__c);
+        finalResult.put('formDepartment', form.department__c);
+        
+        Map<Id, Map<Id, String>> userQuestionResponseMap = getUserQuestionResponseMap(questions, allUsers);
+        Map<Id, String> managerResponseMap = getManagerResponseMap(allUsers, form.Id);
+        
+        List<Map<String, Object>> userResponses = new List<Map<String, Object>>();
+        for (User u : allUsers) {
+            Map<String, Object> userData = new Map<String, Object>{
+                'userId' => u.Id,
+                'userName' => u.Name,
+                'department' => u.department__c,
+                'role' => u.UserRole?.Name,
+                'branch' => userBranchMap.get(u.Id),
+                'managerResponse' => managerResponseMap.get(u.Id),
+                'hasManagerResponse' => managerResponseMap.containsKey(u.Id),
+                'hasSubmitted' => userQuestionResponseMap.containsKey(u.Id)
+            };
+            
+            List<Map<String, String>> questionResponses = new List<Map<String, String>>();
+            for (Feedback_Question__c q : questions) {
+                String answer = '';
+                Boolean hasResponse = false;
+                
+                if (userQuestionResponseMap.containsKey(u.Id) && 
+                    userQuestionResponseMap.get(u.Id).containsKey(q.Id)) {
+                    String storedAnswer = userQuestionResponseMap.get(u.Id).get(q.Id);
+                    answer = decodeResponse(storedAnswer, q.Input_Type__c, false);
+                    hasResponse = true;
+                }
+                
+                questionResponses.add(new Map<String, String>{
+                    'questionId' => q.Id,
+                    'answer' => answer,
+                    'hasResponse' => String.valueOf(hasResponse)
+                });
+            }
+            
+            userData.put('questionResponses', questionResponses);
+            userResponses.add(userData);
+        }
+        
+        finalResult.put('userResponses', userResponses);
+        return finalResult;
     }
     
     private static Map<Id, Map<Id, String>> getUserQuestionResponseMap(List<Feedback_Question__c> questions, List<User> allUsers) {
@@ -527,7 +649,6 @@ public with sharing class QuestionsController {
         List<Map<String, Object>> userResponses = new List<Map<String, Object>>();
         
         for (User u : allUsers) {
-            // Skip system users
             if (u.department__c == null || u.Name == null || 
                 u.Name.contains('Automated Process') || u.Name.contains('Integration User')) {
                 continue;
@@ -543,7 +664,6 @@ public with sharing class QuestionsController {
                 'hasSubmitted' => userQuestionResponseMap.containsKey(u.Id)
             };
             
-            // Add responses for each question
             List<Map<String, String>> questionResponses = new List<Map<String, String>>();
             for (Feedback_Question__c q : questions) {
                 String answer = '';

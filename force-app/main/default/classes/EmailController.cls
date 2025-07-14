@@ -11,8 +11,6 @@ public with sharing class EmailController {
             
             // Check if user has a manager
             String managerResult = sendManagerEmail(user);
-            
-            // Return success message
             return 'Email sent to: ' + user.Name + ' (' + user.Email + ')' + managerResult;
             
         } catch (Exception e) {
@@ -20,7 +18,6 @@ public with sharing class EmailController {
         }
     }
     
-    // Helper method to send individual emails
     private static void sendEmail(String toEmail, String subject, String body) {
         Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
         email.setToAddresses(new List<String>{toEmail});
@@ -29,7 +26,6 @@ public with sharing class EmailController {
         Messaging.sendEmail(new List<Messaging.SingleEmailMessage>{email});
     }
     
-    // Helper method to handle manager email
     private static String sendManagerEmail(User user) {
         try {
             // Get user's role

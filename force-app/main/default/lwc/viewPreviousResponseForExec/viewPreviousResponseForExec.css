@@ -1,0 +1,81 @@
+
+
+.form-card {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.form-title {
+    font-weight: bold;
+    color: #0070d2;
+}
+
+.form-label {
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.filter-control {
+    margin-bottom: 8px;
+}
+
+.filter-actions {
+    display: flex;
+    justify-content: flex-start;
+}
+
+.forms-container {
+    margin-top: 16px;
+}
+
+.empty-state {
+    color: #706e6b;
+    padding: 32px 0;
+}
+
+.month-display {
+    font-weight: 600;
+    margin-right: 4px;
+}
+
+.year-display {
+    font-weight: 600;
+}
+
+/* Questions container styling */
+.questions-container {
+    background-color: #f3f2f2;
+    border-radius: 4px;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.questions-container ul li {
+    border-left: 3px solid #0070d2;
+    background-color: white;
+    border-radius: 0 4px 4px 0;
+    transition: background-color 0.2s ease;
+}
+
+.questions-container ul li:hover {
+    background-color: #f8f9fa;
+}
+
+.slds-badge {
+    background-color: #e6f2fc;
+    color: #0070d2;
+    text-transform: uppercase;
+    font-size: 11px;
+    font-weight: bold;
+}
