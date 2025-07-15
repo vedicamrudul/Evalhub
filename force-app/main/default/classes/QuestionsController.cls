@@ -259,54 +259,29 @@ public with sharing class QuestionsController {
     public static Map<String, Object> getFeedbackData(){
         User currentUser = validateCurrentUser();
         
-        Feedback_Form__c form = getActiveFormByDepartment(currentUser.department__c);
-        Map<String, Object> response = new Map<String, Object>();
+        // Get the employee response using the current user ID with employee view formatting
+        Map<String, Object> response = getEmployeeResponseForManager(currentUser.Id, true);
         
-        if (form == null) {
-            response.put('formExists', false);
-            return response;
+        // Adjust response keys for employee context
+        if (response.containsKey('hasEmployeeSubmitted')) {
+            response.put('hasSubmitted', response.get('hasEmployeeSubmitted'));
+            response.remove('hasEmployeeSubmitted');
         }
-        
-        response.put('formExists', true);
-        
-        List<Feedback_Question__c> formQuestions = getQuestionsByFormId(form.Id);
-        if (formQuestions.isEmpty()) {
-            throw new AuraHandledException('No questions found for the active form.');
-        }
-        
-        Map<Id, Feedback_Response__c> responseMap = getResponseMapForUser(formQuestions, currentUser.Id);
-        
-        List<Map<String, Object>> questions = new List<Map<String, Object>>();
-        for (Feedback_Question__c question : formQuestions) {
-            String answer = '';
-            Boolean hasResponse = false;
-            
-            if (responseMap.containsKey(question.Id)) {
-                answer = responseMap.get(question.Id).Rating_Answer__c;
-                hasResponse = true;
-            }
-            
-            questions.add(buildQuestionData(question, answer, hasResponse, true));
-        }
-        
-        String managerResponseText = getManagerResponseText(currentUser.Id, form.Id);
-        
-        response.put('managerResponseText', managerResponseText);
-        response.put('hasManagerSubmitted', String.isNotBlank(managerResponseText));
-        response.put('questions', questions);
-        response.put('hasSubmitted', !responseMap.isEmpty());
         
         return response;
     }
     
     @AuraEnabled(cacheable=true)
     public static Map<String, Object> getEmployeeResponseForManager(Id employeeId) {
+        return getEmployeeResponseForManager(employeeId, false);
+    }
+    
+    public static Map<String, Object> getEmployeeResponseForManager(Id employeeId, Boolean isEmployeeView) {
         validateCurrentUser();
         
         if (employeeId == null) {
             throw new AuraHandledException('Employee ID cannot be null.');
         }
-        
         User employee = [SELECT department__c FROM User WHERE Id = :employeeId LIMIT 1];
         
         Feedback_Form__c form = getActiveFormByDepartment(employee.department__c);
@@ -336,7 +311,7 @@ public with sharing class QuestionsController {
                 hasResponse = true;
             }
             
-            questions.add(buildQuestionData(question, answer, hasResponse, false));
+            questions.add(buildQuestionData(question, answer, hasResponse, isEmployeeView));
         }
         
         String managerResponseText = getManagerResponseText(employeeId, form.Id);

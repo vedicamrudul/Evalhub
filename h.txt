@@ -1,0 +1,48 @@
+Puzzle - 2 Eggs and 100 Floors
+Last Updated : 27 Dec, 2024
+The following is a description of the instance of this famous puzzle involving 2 eggs and a building with 100 floors. 
+
+Suppose that we wish to know which stories in a 100-storey building are safe to drop eggs from, and which will cause the eggs to break on landing. What strategy should be used to drop eggs such that a total number of drops in the worst case is minimized and we find the required floor 
+
+We may make a few assumptions: 
+
+An egg that survives a fall can be used again.
+A broken egg must be discarded.
+The effect of a fall is the same for all eggs.
+If an egg breaks when dropped, then it would break if dropped from a higher floor.
+If an egg survives a fall then it would survive a shorter fall.
+
+
+optimized Method: The idea is to do optimize the solution using the below equation: 
+
+Let us make our first attempt on x'th floor. 
+
+If it breaks, we try remaining (x-1) floors one by one. 
+So in worst case, we make x trials.
+
+If it doesn't break, we jump (x-1) floors (Because we have
+already made one attempt and we don't want to go beyond 
+x attempts.  Therefore (x-1) attempts are available),
+    Next floor we try is floor x + (x-1)
+
+Similarly, if this drop does not break, next need to jump 
+up to floor x + (x-1) + (x-2), then x + (x-1) + (x-2) + (x-3)
+and so on.
+
+Since the last floor to be tried is 100'th floor, sum of
+series should be 100 for optimal value of x.
+
+ x + (x-1) + (x-2) + (x-3) + .... + 1  = 100
+
+ x(x+1)/2  = 100
+         x = 13.651
+
+Therefore, we start trying from 14'th floor. If Egg breaks on 14th floor
+we one by one try remaining 13 floors, starting from 1st floor.  If egg doesn't break
+we go to 27th floor.
+If egg breaks on 27'th floor, we try floors form 15 to 26.
+If egg doesn't break on 27'th floor, we go to 39'th floor.
+
+An so on...
+
+The optimal number of trials is 14 in the worst case. 
