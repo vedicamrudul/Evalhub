@@ -308,14 +308,14 @@ textarea {
     border-radius: 4px;
     font-size: 0.75rem;
     white-space: nowrap;
-    opacity: 0;
+    opaCluster: 0;
     pointer-events: none;
-    transition: opacity 0.3s ease;
+    transition: opaCluster 0.3s ease;
     z-index: 10;
 }
 
 .emoji-button:hover::after {
-    opacity: 1;
+    opaCluster: 1;
 }
 
 /* Slider Rating Styles */

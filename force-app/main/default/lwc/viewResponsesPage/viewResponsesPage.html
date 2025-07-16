@@ -89,8 +89,8 @@
                 options={stateFilterOptions} value={selectedState} onchange={handleStateFilterChange}></lightning-combobox>
             </div>
             <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
-              <lightning-combobox name="cityFilter" label="Filter By City" placeholder="All Cities"
-                options={cityFilterOptions} value={selectedCity} onchange={handleCityFilterChange}></lightning-combobox>
+              <lightning-combobox name="ClusterFilter" label="Filter By Cluster" placeholder="All Clusters"
+                options={ClusterFilterOptions} value={selectedCluster} onchange={handleClusterFilterChange}></lightning-combobox>
             </div>
             <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
               <lightning-combobox name="branchFilter" label="Filter By Branch" placeholder="All Branches"
@@ -135,7 +135,7 @@
                         <template if:true={user.branch}>
                           <div class="slds-truncate" title={user.branch.branchName}>{user.branch.branchName}</div>
                           <div class="slds-truncate slds-text-body_small">
-                            {user.branch.city}, {user.branch.state}
+                            {user.branch.Cluster}, {user.branch.state}
                           </div>
                         </template>
                         <template if:false={user.branch}>

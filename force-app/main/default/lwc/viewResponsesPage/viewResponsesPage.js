@@ -12,10 +12,10 @@ export default class ViewResponsesPage extends NavigationMixin(LightningElement)
     
     // Branch filter properties for CBO users
     @track selectedState = '';
-    @track selectedCity = '';
+    @track selectedCluster = '';
     @track selectedBranch = '';
     @track stateOptions = [];
-    @track cityOptions = [];
+    @track ClusterOptions = [];
     @track branchOptions = [];
     @track isCBO = false;
     
@@ -92,7 +92,7 @@ export default class ViewResponsesPage extends NavigationMixin(LightningElement)
     processBranchFilterOptions(result) {
         // Add "All" option to each filter
         this.stateOptions = [{ label: 'All States', value: '' }, ...(result.stateOptions || [])];
-        this.cityOptions = [{ label: 'All Cities', value: '' }, ...(result.cityOptions || [])];
+        this.ClusterOptions = [{ label: 'All Clusters', value: '' }, ...(result.ClusterOptions || [])];
         this.branchOptions = [{ label: 'All Branches', value: '' }, ...(result.branchOptions || [])];
     }
     
@@ -223,8 +223,8 @@ export default class ViewResponsesPage extends NavigationMixin(LightningElement)
                     return false;
                 }
                 
-                // City filter
-                if (this.selectedCity && user.branch?.city !== this.selectedCity) {
+                // Cluster filter
+                if (this.selectedCluster && user.branch?.Cluster !== this.selectedCluster) {
                     return false;
                 }
                 
@@ -264,15 +264,15 @@ export default class ViewResponsesPage extends NavigationMixin(LightningElement)
     handleStateFilterChange(event) {
         this.selectedState = event.detail.value;
         // Reset dependent filters when state changes
-        this.selectedCity = '';
+        this.selectedCluster = '';
         this.selectedBranch = '';
         this.updateDependentFilters();
         this.applyFilters();
     }
     
-    handleCityFilterChange(event) {
-        this.selectedCity = event.detail.value;
-        // Reset branch filter when city changes
+    handleClusterFilterChange(event) {
+        this.selectedCluster = event.detail.value;
+        // Reset branch filter when Cluster changes
         this.selectedBranch = '';
         this.updateDependentFilters();
         this.applyFilters();
@@ -289,27 +289,27 @@ export default class ViewResponsesPage extends NavigationMixin(LightningElement)
         
         const allUsers = this.formData.userResponses || [];
         
-        // Update city options based on selected state
-        let availableCities = new Set();
+        // Update Cluster options based on selected state
+        let availableClusters = new Set();
         allUsers.forEach(user => {
             if (user.branch && (!this.selectedState || user.branch.state === this.selectedState)) {
-                if (user.branch.city) {
-                    availableCities.add(user.branch.city);
+                if (user.branch.Cluster) {
+                    availableClusters.add(user.branch.Cluster);
                 }
             }
         });
         
-        this.cityOptions = [
-            { label: 'All Cities', value: '' },
-            ...Array.from(availableCities).map(city => ({ label: city, value: city }))
+        this.ClusterOptions = [
+            { label: 'All Clusters', value: '' },
+            ...Array.from(availableClusters).map(Cluster => ({ label: Cluster, value: Cluster }))
         ];
         
-        // Update branch options based on selected state and city
+        // Update branch options based on selected state and Cluster
         let availableBranches = new Set();
         allUsers.forEach(user => {
             if (user.branch && 
                 (!this.selectedState || user.branch.state === this.selectedState) &&
-                (!this.selectedCity || user.branch.city === this.selectedCity)) {
+                (!this.selectedCluster || user.branch.Cluster === this.selectedCluster)) {
                 if (user.branch.branchName) {
                     availableBranches.add(user.branch.branchName);
                 }
@@ -342,7 +342,7 @@ export default class ViewResponsesPage extends NavigationMixin(LightningElement)
         // Reset branch filters for CBO users
         if (this.isCBO) {
             this.selectedState = '';
-            this.selectedCity = '';
+            this.selectedCluster = '';
             this.selectedBranch = '';
         }
         this.loadUserResponses();
@@ -424,8 +424,8 @@ export default class ViewResponsesPage extends NavigationMixin(LightningElement)
         return this.stateOptions;
     }
     
-    get cityFilterOptions() {
-        return this.cityOptions;
+    get ClusterFilterOptions() {
+        return this.ClusterOptions;
     }
     
     get branchFilterOptions() {

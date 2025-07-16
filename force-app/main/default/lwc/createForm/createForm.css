@@ -107,7 +107,7 @@
     height: 1.25rem;
     background-color: #3498db;
     border-radius: 4px;
-    opacity: 0.8;
+    opaCluster: 0.8;
 }
 
 .delete-button {
@@ -189,11 +189,11 @@
 
 @keyframes fadeInUp {
     from { 
-        opacity: 0; 
+        opaCluster: 0; 
         transform: translateY(20px); 
     }
     to { 
-        opacity: 1; 
+        opaCluster: 1; 
         transform: translateY(0); 
     }
 }
@@ -212,11 +212,11 @@
 /* Add animation for adding questions */
 @keyframes slideIn {
     from { 
-        opacity: 0; 
+        opaCluster: 0; 
         transform: translateY(20px); 
     }
     to { 
-        opacity: 1; 
+        opaCluster: 1; 
         transform: translateY(0); 
     }
 }
