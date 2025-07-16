@@ -11,10 +11,10 @@ export default class ViewResponsesPage extends NavigationMixin(LightningElement)
     @track viewOption = 'all'; // all, submitted, pending, reviewed
     
     // Branch filter properties for CBO users
-    @track selectedState = '';
+    @track selectedRegion = '';
     @track selectedCluster = '';
     @track selectedBranch = '';
-    @track stateOptions = [];
+    @track RegionOptions = [];
     @track ClusterOptions = [];
     @track branchOptions = [];
     @track isCBO = false;
@@ -91,7 +91,7 @@ export default class ViewResponsesPage extends NavigationMixin(LightningElement)
     // Process branch filter options for CBO users
     processBranchFilterOptions(result) {
         // Add "All" option to each filter
-        this.stateOptions = [{ label: 'All States', value: '' }, ...(result.stateOptions || [])];
+        this.RegionOptions = [{ label: 'All Zones', value: '' }, ...(result.RegionOptions || [])];
         this.ClusterOptions = [{ label: 'All Clusters', value: '' }, ...(result.ClusterOptions || [])];
         this.branchOptions = [{ label: 'All Branches', value: '' }, ...(result.branchOptions || [])];
     }
@@ -219,7 +219,7 @@ export default class ViewResponsesPage extends NavigationMixin(LightningElement)
             // Apply branch filters for CBO users
             if (this.isCBO) {
                 // State filter
-                if (this.selectedState && user.branch?.state !== this.selectedState) {
+                if (this.selectedRegion && user.branch?.Region !== this.selectedRegion) {
                     return false;
                 }
                 
@@ -261,8 +261,8 @@ export default class ViewResponsesPage extends NavigationMixin(LightningElement)
     }
     
     // Handle branch filter changes for CBO users
-    handleStateFilterChange(event) {
-        this.selectedState = event.detail.value;
+    handleRegionFilterChange(event) {
+        this.selectedRegion = event.detail.value;
         // Reset dependent filters when state changes
         this.selectedCluster = '';
         this.selectedBranch = '';
@@ -292,7 +292,7 @@ export default class ViewResponsesPage extends NavigationMixin(LightningElement)
         // Update Cluster options based on selected state
         let availableClusters = new Set();
         allUsers.forEach(user => {
-            if (user.branch && (!this.selectedState || user.branch.state === this.selectedState)) {
+            if (user.branch && (!this.selectedRegion || user.branch.Region === this.selectedRegion)) {
                 if (user.branch.Cluster) {
                     availableClusters.add(user.branch.Cluster);
                 }
@@ -308,7 +308,7 @@ export default class ViewResponsesPage extends NavigationMixin(LightningElement)
         let availableBranches = new Set();
         allUsers.forEach(user => {
             if (user.branch && 
-                (!this.selectedState || user.branch.state === this.selectedState) &&
+                (!this.selectedRegion || user.branch.Region === this.selectedRegion) &&
                 (!this.selectedCluster || user.branch.Cluster === this.selectedCluster)) {
                 if (user.branch.branchName) {
                     availableBranches.add(user.branch.branchName);
@@ -341,7 +341,7 @@ export default class ViewResponsesPage extends NavigationMixin(LightningElement)
     refreshData() {
         // Reset branch filters for CBO users
         if (this.isCBO) {
-            this.selectedState = '';
+            this.selectedRegion = '';
             this.selectedCluster = '';
             this.selectedBranch = '';
         }
@@ -420,8 +420,8 @@ export default class ViewResponsesPage extends NavigationMixin(LightningElement)
     }
     
     // Branch filter getters for CBO users
-    get stateFilterOptions() {
-        return this.stateOptions;
+    get RegionFilterOptions() {
+        return this.RegionOptions;
     }
     
     get ClusterFilterOptions() {

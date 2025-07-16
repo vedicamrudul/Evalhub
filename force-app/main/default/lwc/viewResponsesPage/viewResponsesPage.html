@@ -85,8 +85,8 @@
         <template if:true={isCBO}>
           <div class="slds-grid slds-wrap slds-gutters slds-m-bottom_medium">
             <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
-              <lightning-combobox name="stateFilter" label="Filter By State" placeholder="All States"
-                options={stateFilterOptions} value={selectedState} onchange={handleStateFilterChange}></lightning-combobox>
+              <lightning-combobox name="RegionFilter" label="Filter By Zone" placeholder="All Zones"
+                options={RegionFilterOptions} value={selectedRegion} onchange={handleRegionFilterChange}></lightning-combobox>
             </div>
             <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
               <lightning-combobox name="ClusterFilter" label="Filter By Cluster" placeholder="All Clusters"
@@ -135,7 +135,7 @@
                         <template if:true={user.branch}>
                           <div class="slds-truncate" title={user.branch.branchName}>{user.branch.branchName}</div>
                           <div class="slds-truncate slds-text-body_small">
-                            {user.branch.Cluster}, {user.branch.state}
+                            {user.branch.Cluster}, {user.branch.Region}
                           </div>
                         </template>
                         <template if:false={user.branch}>

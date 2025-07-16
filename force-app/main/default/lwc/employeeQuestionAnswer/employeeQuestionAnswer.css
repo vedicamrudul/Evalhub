@@ -1,11 +1,12 @@
 .container {
     font-family: 'Salesforce Sans', Arial, sans-serif;
-    max-width: 900px;
-    margin: 0 auto;
+    width: 100%;
+    margin: 0;
     padding: 1.5rem;
     background-color: #f8fafc;
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    box-sizing: border-box;
 }
 
 .container lightning-card {
@@ -36,19 +37,42 @@
 
 /* Thank You Card styling */
 .container lightning-card.slds-theme_success {
-    background-color: #ebfbee; /* Light pastel green */
-    border-left: 5px solid #8bd8a5;
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    border-left: 5px solid #28a745;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(40, 167, 69, 0.15);
+    position: relative;
+    overflow: hidden;
+}
+
+.container lightning-card.slds-theme_success::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #28a745, #20c997, #17a2b8);
+    animation: shimmer 2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    0% { opacity: 0.5; }
+    50% { opacity: 1; }
+    100% { opacity: 0.5; }
 }
 
 /* Question container styling */
 .question-container {
     background-color: white;
     border-radius: 8px;
-    padding: 1.25rem;
+    padding: 1.5rem;
     margin-bottom: 1.25rem;
     border-left: 5px solid #a6c8ff; /* Medium pastel blue */
     transition: all 0.2s ease;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .question-container:hover {
@@ -67,11 +91,13 @@
 /* Feedback responses styling */
 .slds-m-bottom_medium {
     background-color: #f9f9ff;
-    padding: 1rem;
+    padding: 1.25rem;
     border-radius: 8px;
     margin-bottom: 1.25rem;
     border-left: 4px solid #d0bfff; /* Soft lavender */
     transition: all 0.2s ease;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .slds-m-bottom_medium:hover {
@@ -94,28 +120,56 @@ lightning-button button {
 
 /* View Submission Button */
 lightning-button[label="View Your Submission"] button {
-    background-color: #dbe9ff !important;
-    border-color: #c2d8ff !important;
-    color: #2c5282 !important;
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%) !important;
+    border: 2px solid #2196f3 !important;
+    color: #0d47a1 !important;
+    font-weight: 600 !important;
+    padding: 0.75rem 1.5rem !important;
+    border-radius: 10px !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 4px 15px rgba(33, 150, 243, 0.2) !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+lightning-button[label="View Your Submission"] button::before {
+    content: '📋';
+    margin-right: 0.5rem;
+    font-size: 1.1rem;
 }
 
 lightning-button[label="View Your Submission"] button:hover {
-    background-color: #c2d8ff !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+    background: linear-gradient(135deg, #bbdefb 0%, #90caf9 100%) !important;
+    transform: translateY(-3px) !important;
+    box-shadow: 0 8px 25px rgba(33, 150, 243, 0.3) !important;
+    border-color: #1976d2 !important;
 }
 
 /* View Manager Feedback Button */
 lightning-button[label="View Manager Feedback"] button {
-    background-color: #e9dbff !important;
-    border-color: #d4c2ff !important;
-    color: #4c2889 !important;
+    background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%) !important;
+    border: 2px solid #9c27b0 !important;
+    color: #4a148c !important;
+    font-weight: 600 !important;
+    padding: 0.75rem 1.5rem !important;
+    border-radius: 10px !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 4px 15px rgba(156, 39, 176, 0.2) !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+lightning-button[label="View Manager Feedback"] button::before {
+    content: '💬';
+    margin-right: 0.5rem;
+    font-size: 1.1rem;
 }
 
 lightning-button[label="View Manager Feedback"] button:hover {
-    background-color: #d4c2ff !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+    background: linear-gradient(135deg, #e1bee7 0%, #ce93d8 100%) !important;
+    transform: translateY(-3px) !important;
+    box-shadow: 0 8px 25px rgba(156, 39, 176, 0.3) !important;
+    border-color: #7b1fa2 !important;
 }
 
 /* Submit button styling */
@@ -135,17 +189,104 @@ lightning-button[variant="brand"] button:hover {
 /* Success message styling */
 .success-message {
     text-align: center;
-    font-size: 1.25rem;
-    padding: 1.75rem;
-    color: #2e7d32;
-    line-height: 1.6;
+    padding: 3rem 2rem;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 16px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+    margin: 2rem 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.success-message::before {
+    content: '✨';
+    position: absolute;
+    top: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 3rem;
+    opacity: 0.1;
+    animation: float 3s ease-in-out infinite;
+}
+
+.success-message::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 30% 30%, rgba(40, 167, 69, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 70% 70%, rgba(23, 162, 184, 0.05) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+.success-message > * {
+    position: relative;
+    z-index: 1;
 }
 
 .success-message p:first-child {
-    font-size: 1.5rem;
-    font-weight: 600;
-    margin-bottom: 0.75rem;
-    color: #1b5e20;
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: #155724;
+    text-shadow: 0 2px 4px rgba(21, 87, 36, 0.1);
+    line-height: 1.3;
+}
+
+.success-message p:not(:first-child) {
+    font-size: 1.1rem;
+    color: #2c5530;
+    line-height: 1.6;
+    margin: 0.5rem 0;
+    font-weight: 400;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(-10px); }
+}
+
+/* Enhanced Thank You Card Content */
+.success-card-content {
+    padding: 2rem;
+    text-align: center;
+}
+
+.success-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #28a745, #20c997);
+    border-radius: 50%;
+    margin: 0 auto 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: white;
+    box-shadow: 0 8px 20px rgba(40, 167, 69, 0.3);
+    animation: successPulse 2s ease-in-out infinite;
+}
+
+@keyframes successPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.success-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #155724;
+    margin-bottom: 1rem;
+    text-shadow: 0 2px 4px rgba(21, 87, 36, 0.1);
+}
+
+.success-subtitle {
+    font-size: 1.1rem;
+    color: #2c5530;
+    margin-bottom: 2rem;
+    line-height: 1.6;
 }
 
 /* Input field styling */
@@ -193,6 +334,8 @@ textarea {
     color: #4a5568;
     font-size: 1.05rem;
     line-height: 1.6;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 /* Button container styling */
@@ -200,10 +343,13 @@ textarea {
     display: flex;
     flex-wrap: wrap;
     gap: 0.75rem;
-    padding: 0.5rem 0.75rem;
+    padding: 1rem;
     background-color: #f8f9fa;
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    width: 100%;
+    box-sizing: border-box;
+    justify-content: flex-start;
 }
 .form-not-exist-message {
     font-size: 1.2rem; /* Increase the font size */
@@ -340,4 +486,380 @@ textarea {
     color: #374151;
     margin-bottom: 0.5rem;
     display: block;
+}
+
+/* Responsive Design for Full Width Layout */
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+        border-radius: 8px;
+    }
+    
+    .question-container {
+        padding: 1rem;
+    }
+    
+    .manager-feedback-container {
+        padding: 1rem;
+    }
+    
+    .button-container {
+        padding: 0.75rem;
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    lightning-button {
+        margin: 0.25rem 0;
+        width: 100%;
+    }
+    
+    .emoji-rating {
+        gap: 0.5rem;
+    }
+    
+    .emoji-button {
+        width: 3rem;
+        height: 3rem;
+        font-size: 1.5rem;
+    }
+    
+    /* Mobile Post-Submission Styling */
+    .success-message {
+        padding: 2rem 1rem;
+        margin: 1rem 0;
+    }
+    
+    .success-message p:first-child {
+        font-size: 1.5rem;
+    }
+    
+    .success-icon {
+        width: 60px;
+        height: 60px;
+        font-size: 2rem;
+    }
+    
+    .post-submission-actions {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .action-card {
+        padding: 1rem;
+    }
+    
+    .submission-status-banner {
+        padding: 1rem;
+    }
+}
+
+@media (min-width: 1200px) {
+    .container {
+        padding: 2rem;
+    }
+    
+    .question-container {
+        padding: 2rem;
+    }
+    
+    .manager-feedback-container {
+        padding: 2rem;
+    }
+    
+    .button-container {
+        padding: 1.25rem;
+        gap: 1rem;
+    }
+    
+    /* Large Screen Post-Submission Enhancements */
+    .success-message {
+        padding: 4rem 3rem;
+    }
+    
+    .success-message p:first-child {
+        font-size: 2.5rem;
+    }
+    
+    .success-icon {
+        width: 100px;
+        height: 100px;
+        font-size: 3rem;
+    }
+    
+    .post-submission-actions {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+    }
+}
+
+/* Ensure all input fields use full width appropriately */
+lightning-input, 
+lightning-combobox, 
+lightning-slider {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Post-Submission Status Banner */
+.submission-status-banner {
+    background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+    border: 2px solid #17a2b8;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+    text-align: center;
+    box-shadow: 0 6px 20px rgba(23, 162, 184, 0.15);
+    position: relative;
+    overflow: hidden;
+}
+
+.submission-status-banner::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, #17a2b8, transparent);
+    animation: statusPulse 3s ease-in-out infinite;
+}
+
+@keyframes statusPulse {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+.submission-status-banner .status-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.submission-status-banner .status-text {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #0c5460;
+    margin-bottom: 0.5rem;
+}
+
+.submission-status-banner .status-subtitle {
+    font-size: 1rem;
+    color: #0c5460;
+    opacity: 0.8;
+}
+
+/* Enhanced Form Completion Indicators */
+.completion-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #e8f5e8 0%, #d4edda 100%);
+    border: 2px solid #28a745;
+    border-radius: 50px;
+    padding: 0.75rem 1.5rem;
+    margin: 1rem 0;
+    font-weight: 600;
+    color: #155724;
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.2);
+}
+
+.completion-indicator::before {
+    content: '✅';
+    margin-right: 0.75rem;
+    font-size: 1.2rem;
+    animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-8px); }
+    60% { transform: translateY(-4px); }
+}
+
+/* Post-Submission Action Cards */
+.post-submission-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+}
+
+.action-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.action-card:hover {
+    border-color: #007bff;
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 123, 255, 0.15);
+}
+
+.action-card .card-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.action-card .card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+}
+
+.action-card .card-description {
+    font-size: 0.9rem;
+    color: #6c757d;
+    line-height: 1.4;
+}
+
+/* Celebration Animation Effects */
+.celebration-container {
+    position: relative;
+    overflow: hidden;
+}
+
+.celebration-container::before {
+    content: '🎉';
+    position: absolute;
+    top: -50px;
+    left: 10%;
+    font-size: 2rem;
+    animation: confetti-fall 3s ease-in-out infinite;
+    animation-delay: 0s;
+}
+
+.celebration-container::after {
+    content: '🎊';
+    position: absolute;
+    top: -50px;
+    right: 10%;
+    font-size: 2rem;
+    animation: confetti-fall 3s ease-in-out infinite;
+    animation-delay: 1s;
+}
+
+@keyframes confetti-fall {
+    0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(200px) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+/* Success Ripple Effect */
+.success-ripple {
+    position: relative;
+    overflow: hidden;
+}
+
+.success-ripple::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(40, 167, 69, 0.1);
+    transform: translate(-50%, -50%);
+    animation: ripple 2s ease-out infinite;
+}
+
+@keyframes ripple {
+    0% {
+        width: 0;
+        height: 0;
+        opacity: 1;
+    }
+    100% {
+        width: 300px;
+        height: 300px;
+        opacity: 0;
+    }
+}
+
+/* Enhanced Button Hover States for Post-Submission */
+.post-submission-actions .action-card:hover {
+    cursor: pointer;
+}
+
+.post-submission-actions .action-card:hover .card-icon {
+    animation: wiggle 0.5s ease-in-out;
+}
+
+@keyframes wiggle {
+    0%, 7% { transform: rotateZ(0); }
+    15% { transform: rotateZ(-15deg); }
+    20% { transform: rotateZ(10deg); }
+    25% { transform: rotateZ(-10deg); }
+    30% { transform: rotateZ(6deg); }
+    35% { transform: rotateZ(-4deg); }
+    40%, 100% { transform: rotateZ(0); }
+}
+
+/* Progress Indicator for Submitted Forms */
+.submission-progress {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 1rem 0;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    border: 2px solid #e9ecef;
+}
+
+.progress-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+    font-weight: 600;
+    color: #495057;
+}
+
+.progress-header::before {
+    content: '📊';
+    margin-right: 0.5rem;
+    font-size: 1.2rem;
+}
+
+.progress-bar-container {
+    background-color: #e9ecef;
+    border-radius: 10px;
+    height: 8px;
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #28a745, #20c997);
+    border-radius: 10px;
+    transition: width 0.5s ease;
+    position: relative;
+}
+
+.progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: progress-shine 2s ease-in-out infinite;
+}
+
+@keyframes progress-shine {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
 }

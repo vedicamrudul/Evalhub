@@ -412,7 +412,7 @@ public with sharing class QuestionsController {
             // For CBO, get users with branch information
             List<BranchUserAllocation__c> branchAllocations = [
                 SELECT User__r.Id, User__r.Name, User__r.department__c, User__r.UserRole.Name, 
-                       Branch__r.Name, Branch__r.State__c, Branch__r.Cluster__c, Branch__r.Id
+                       Branch__r.Name, Branch__r.Region__c, Branch__r.Cluster__c, Branch__r.Id
                 FROM BranchUserAllocation__c
                 WHERE User__r.Id != :UserInfo.getUserId()
                 AND User__r.department__c = :form.department__c
@@ -421,7 +421,7 @@ public with sharing class QuestionsController {
             // Extract user IDs and create maps
             Set<Id> userIds = new Set<Id>();
             Map<Id, Map<String, String>> userBranchMap = new Map<Id, Map<String, String>>();
-            Set<String> allStates = new Set<String>();
+            Set<String> allRegions = new Set<String>();
             Set<String> allClusters = new Set<String>();
             Set<String> allBranches = new Set<String>();
             
@@ -432,13 +432,13 @@ public with sharing class QuestionsController {
                 userBranchMap.put(allocation.User__r.Id, new Map<String, String>{
                     'branchId' => allocation.Branch__r.Id,
                     'branchName' => allocation.Branch__r.Name,
-                    'state' => allocation.Branch__r.State__c,
+                    'Region' => allocation.Branch__r.Region__c,
                     'Cluster' => allocation.Branch__r.Cluster__c
                 });
                 
                 // Collect unique values for filters
-                if(String.isNotBlank(allocation.Branch__r.State__c)) {
-                    allStates.add(allocation.Branch__r.State__c);
+                if(String.isNotBlank(allocation.Branch__r.Region__c)) {
+                    allRegions.add(allocation.Branch__r.Region__c);
                 }
                 if(String.isNotBlank(allocation.Branch__r.Cluster__c)) {
                     allClusters.add(allocation.Branch__r.Cluster__c);
@@ -456,9 +456,9 @@ public with sharing class QuestionsController {
             ];
             
             // Add filter options to result
-            List<Map<String, String>> stateOptions = new List<Map<String, String>>();
-            for(String state : allStates) {
-                stateOptions.add(new Map<String, String>{'label' => state, 'value' => state});
+            List<Map<String, String>> RegionOptions = new List<Map<String, String>>();
+            for(String Region : allRegions) {
+                RegionOptions.add(new Map<String, String>{'label' => Region, 'value' => Region});
             }
             
             List<Map<String, String>> ClusterOptions = new List<Map<String, String>>();
@@ -471,7 +471,7 @@ public with sharing class QuestionsController {
                 branchOptions.add(new Map<String, String>{'label' => branch, 'value' => branch});
             }
             
-            result.put('stateOptions', stateOptions);
+            result.put('RegionOptions', RegionOptions);
             result.put('ClusterOptions', ClusterOptions);
             result.put('branchOptions', branchOptions);
             result.put('userBranchMap', userBranchMap);
