@@ -47,8 +47,7 @@ export default class ViewResponsesPage extends NavigationMixin(LightningElement)
             }
         }
     }
-    
-    // Load user responses from server
+        
     loadUserResponses() {
         if (!this.formId) {
             this.error = 'No form selected. Please select a form from the previous page.';
@@ -65,7 +64,6 @@ export default class ViewResponsesPage extends NavigationMixin(LightningElement)
                 this.formData = result;
                 this.isCBO = result.isCBO || false;
                 
-                // Process branch filtering options for CBO users
                 if (this.isCBO) {
                     this.processBranchFilterOptions(result);
                 }

@@ -16,47 +16,59 @@
         <template if:false={isLoading}>
             <!-- Submitted State -->
             <template if:true={feedbackData.hasSubmitted}>
-                <!-- Thank You message only visible when not viewing responses -->
-                <template if:false={isViewingResponses}>
-                    <lightning-card title="Thank You" icon-name="action:approval" class="slds-theme_success">
-                        <div class="slds-p-around_small success-message">
-                            <p>Thank you for your feedback!</p>
-                        </div>
-                    </lightning-card>
-                </template>
-
-                <!-- buttons for viewing the submissions - always visible -->
-                <div class="button-container slds-m-top_medium slds-m-bottom_medium">
-                    <lightning-button label="View Your Submission" onclick={handleViewSubmissionClick}></lightning-button>
+                <!-- Action buttons at the top -->
+                <div class="action-buttons-container slds-m-bottom_medium">
+                    <lightning-button label="View Your Submission" onclick={handleViewSubmissionClick} 
+                        class={submissionButtonClass}></lightning-button>
                     <template if:true={feedbackData.hasManagerSubmitted}>
-                        <lightning-button label="View Manager Feedback" onclick={handleViewManagerClick}></lightning-button>
+                        <lightning-button label="View Manager Feedback" onclick={handleViewManagerClick}
+                            class={managerButtonClass}></lightning-button>
                     </template>
                 </div>
 
-                <!-- Content sections that toggle -->
-                <template if:true={viewSubmissionButtonClicked}>
-                    <lightning-card title="Your Feedback Responses" icon-name="standard:feedback">
-                        <div class="slds-p-around_small">
-                            <template for:each={feedbackData.questions} for:item="question">
-                                <div key={question.id} class="slds-m-bottom_medium">
-                                    <p class="question-text slds-text-heading_small">
-                                        <strong>{question.questionText}</strong>
-                                    </p>
-                                    <p class="slds-m-top_x-small slds-p-left_medium">
-                                        <lightning-formatted-text
-                                            value={question.answer}></lightning-formatted-text>
-                                    </p>
-                                </div>
-                            </template>
+                <!-- Compact Thank You message - only shows when no content is being viewed -->
+                <template if:false={isViewingResponses}>
+                    <div class="thank-you-banner">
+                        <div class="thank-you-content">
+                            <span class="thank-you-icon">✅</span>
+                            <div class="thank-you-text">
+                                <h3>Feedback Submitted Successfully</h3>
+                                <p>Thank you for taking the time to share your thoughts!</p>
+                            </div>
                         </div>
-                    </lightning-card>
+                    </div>
                 </template>
-                
-                <template if:true={viewManagerFeedbackClicked}>
-                    <lightning-card title="Manager Feedback" icon-name="standard:feedback">
-                        <div class="manager-feedback-container">{feedbackData.managerResponseText}</div>
-                    </lightning-card>
-                </template>
+
+                <!-- Content sections that toggle with smooth transitions -->
+                <div class="content-transition-container">
+                    <template if:true={viewSubmissionButtonClicked}>
+                        <div class="content-section fade-in">
+                            <lightning-card title="Your Feedback Responses" icon-name="standard:feedback">
+                                <div class="slds-p-around_small">
+                                    <template for:each={feedbackData.questions} for:item="question">
+                                        <div key={question.id} class="slds-m-bottom_medium">
+                                            <p class="question-text slds-text-heading_small">
+                                                <strong>{question.questionText}</strong>
+                                            </p>
+                                            <p class="slds-m-top_x-small slds-p-left_medium">
+                                                <lightning-formatted-text
+                                                    value={question.answer}></lightning-formatted-text>
+                                            </p>
+                                        </div>
+                                    </template>
+                                </div>
+                            </lightning-card>
+                        </div>
+                    </template>
+                    
+                    <template if:true={viewManagerFeedbackClicked}>
+                        <div class="content-section fade-in">
+                            <lightning-card title="Manager Feedback" icon-name="standard:feedback">
+                                <div class="manager-feedback-container">{feedbackData.managerResponseText}</div>
+                            </lightning-card>
+                        </div>
+                    </template>
+                </div>
             </template>
 
             <!-- Not Submitted State -->
@@ -105,10 +117,11 @@
                                 <template if:true={question.isSlider}>
                                     <div class="slider-container">
                                         <lightning-slider 
-                                            label="Rate from 1 to 10" 
-                                            min={question.sliderMin} 
-                                            max={question.sliderMax} 
+                                            label="Rate from 0 to 10" 
+                                            min="0" 
+                                            max="10" 
                                             step="1" 
+                                            value="5"
                                             data-id={question.id}
                                             onchange={handleSliderChange}
                                             class="slds-m-bottom_small">

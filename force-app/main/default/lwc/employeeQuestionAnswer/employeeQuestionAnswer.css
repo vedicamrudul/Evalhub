@@ -186,66 +186,21 @@ lightning-button[variant="brand"] button:hover {
     box-shadow: 0 6px 12px rgba(76, 154, 255, 0.4) !important;
 }
 
-/* Success message styling */
+/* Legacy success message styling - kept minimal for compatibility */
 .success-message {
     text-align: center;
-    padding: 3rem 2rem;
+    padding: 1rem;
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border-radius: 16px;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
-    margin: 2rem 0;
-    position: relative;
-    overflow: hidden;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    margin: 1rem 0;
 }
 
-.success-message::before {
-    content: '✨';
-    position: absolute;
-    top: 1rem;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 3rem;
-    opacity: 0.1;
-    animation: float 3s ease-in-out infinite;
-}
-
-.success-message::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: radial-gradient(circle at 30% 30%, rgba(40, 167, 69, 0.05) 0%, transparent 50%),
-                radial-gradient(circle at 70% 70%, rgba(23, 162, 184, 0.05) 0%, transparent 50%);
-    pointer-events: none;
-}
-
-.success-message > * {
-    position: relative;
-    z-index: 1;
-}
-
-.success-message p:first-child {
-    font-size: 2rem;
-    font-weight: 700;
-    margin-bottom: 1rem;
-    color: #155724;
-    text-shadow: 0 2px 4px rgba(21, 87, 36, 0.1);
-    line-height: 1.3;
-}
-
-.success-message p:not(:first-child) {
+.success-message p {
     font-size: 1.1rem;
     color: #2c5530;
-    line-height: 1.6;
     margin: 0.5rem 0;
-    font-weight: 400;
-}
-
-@keyframes float {
-    0%, 100% { transform: translateX(-50%) translateY(0); }
-    50% { transform: translateX(-50%) translateY(-10px); }
+    font-weight: 500;
 }
 
 /* Enhanced Thank You Card Content */
@@ -338,7 +293,28 @@ textarea {
     box-sizing: border-box;
 }
 
-/* Button container styling */
+/* Action buttons container - moved to top */
+.action-buttons-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    width: 100%;
+    box-sizing: border-box;
+    justify-content: center;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.action-buttons-container:hover {
+    border-color: #e3f2fd;
+    background-color: #fafbfc;
+}
+
+/* Button container styling - legacy support */
 .button-container {
     display: flex;
     flex-wrap: wrap;
@@ -445,23 +421,25 @@ textarea {
 .emoji-button::after {
     content: attr(data-label);
     position: absolute;
-    bottom: -2rem;
+    bottom: -2.5rem;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.9);
     color: white;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
     font-size: 0.75rem;
     white-space: nowrap;
-    opaCluster: 0;
+    opacity: 0;
     pointer-events: none;
-    transition: opaCluster 0.3s ease;
-    z-index: 10;
+    transition: opacity 0.3s ease;
+    z-index: 1000;
+    min-width: max-content;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .emoji-button:hover::after {
-    opaCluster: 1;
+    opacity: 1;
 }
 
 /* Slider Rating Styles */
@@ -862,4 +840,135 @@ lightning-slider {
 @keyframes progress-shine {
     0% { transform: translateX(-100%); }
     100% { transform: translateX(100%); }
+}
+
+/* Compact Thank You Banner */
+.thank-you-banner {
+    background: linear-gradient(135deg, #e8f5e8 0%, #d4edda 100%);
+    border: 2px solid #28a745;
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin: 1rem 0;
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.15);
+    transition: all 0.4s ease;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.thank-you-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.thank-you-icon {
+    font-size: 2rem;
+    animation: gentle-bounce 2s ease-in-out infinite;
+}
+
+.thank-you-text h3 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #155724;
+}
+
+.thank-you-text p {
+    margin: 0;
+    font-size: 0.95rem;
+    color: #2c5530;
+    opacity: 0.9;
+}
+
+@keyframes gentle-bounce {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+/* Content Transition Container */
+.content-transition-container {
+    position: relative;
+    width: 100%;
+}
+
+.content-section {
+    width: 100%;
+}
+
+/* Fade-in animation for content sections */
+.fade-in {
+    animation: fadeInUp 0.4s ease-out forwards;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Active button states */
+.action-buttons-container lightning-button.active-button button,
+.action-buttons-container lightning-button[class*="active-button"] button {
+    background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%) !important;
+    border-color: #1976d2 !important;
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3) !important;
+    transform: translateY(-2px) !important;
+}
+
+/* Enhanced button styling for action buttons */
+.action-buttons-container lightning-button button {
+    padding: 0.75rem 1.5rem !important;
+    font-weight: 600 !important;
+    border-radius: 10px !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    border: 2px solid #e2e8f0 !important;
+    background: white !important;
+    color: #4a5568 !important;
+}
+
+.action-buttons-container lightning-button button:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15) !important;
+    border-color: #cbd5e0 !important;
+}
+
+/* Smooth transitions for thank you banner */
+.thank-you-banner.fade-out {
+    opacity: 0;
+    transform: translateY(-10px);
+    pointer-events: none;
+}
+
+/* Mobile responsive updates */
+@media (max-width: 768px) {
+    .action-buttons-container {
+        flex-direction: column;
+        gap: 0.75rem;
+        padding: 0.75rem;
+    }
+    
+    .action-buttons-container lightning-button {
+        width: 100%;
+    }
+    
+    .thank-you-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.75rem;
+    }
+    
+    .thank-you-text h3 {
+        font-size: 1.1rem;
+    }
+    
+    .thank-you-text p {
+        font-size: 0.9rem;
+    }
 }

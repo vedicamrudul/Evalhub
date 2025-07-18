@@ -475,7 +475,34 @@ public with sharing class QuestionsController {
             result.put('ClusterOptions', ClusterOptions);
             result.put('branchOptions', branchOptions);
             result.put('userBranchMap', userBranchMap);
+
+            System.debug('result: ' + result);
+            /*
+           result: 
+            {ClusterOptions=
+            ({label=MUM-1, value=MUM-1}, {label=KRL-1, value=KRL-1}), RegionOptions=({label=West, value=West}, {label=South, value=South}), branchOptions=({label=Borivali, value=Borivali}, {label=Kochi, value=Kochi}), currentUserRole=CBO, isCBO=true, userBranchMap={005Qy00000QU25RIAT={Cluster=MUM-1, Region=West, branchId=a04Qy000006rfnxIAA, branchName=Borivali}, 005Qy00000QU2abIAD={Cluster=KRL-1, Region=South, branchId=a04Qy000006rcrjIAA, branchName=Kochi}}}
+            */
             
+
+            /*
+            How Lightning Combobox Uses Both Label and Value
+            Here's what happens:
+            1. options={RegionFilterOptions} - This is where the label is used
+                When you pass the options array like this:
+                RegionOptions=({label=West, value=West}, {label=South, value=South})
+                The label is the text that appears in the dropdown, and the value is the actual value that gets stored when the user selects an option.
+                The Lightning combobox component internally uses the label to display the dropdown options that users see and click on.
+            2. value={selectedRegion} - This is where the value is used
+                When a user clicks on "North Region" in the dropdown, the combobox:
+                Takes the value from that option ('North Region')
+                Assigns it to selectedRegion
+                This triggers the onchange event
+                Visual Flow:
+                User sees: "North Region" (from label)
+                User clicks: "North Region"
+                Component stores: "North Region" (from value)
+                Variable gets: selectedRegion = "North Region"
+*/  
             return buildAdminResponseDataWithBranch(form, questions, allUsers, userBranchMap, result);
         } else {
             // Regular flow for non-CBO users

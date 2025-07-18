@@ -22,6 +22,15 @@ export default class EmployeeQuestionAnswer extends LightningElement {
         return this.viewSubmissionButtonClicked || this.viewManagerFeedbackClicked;
     }
 
+    // Computed getters for button active states
+    get submissionButtonClass() {
+        return this.viewSubmissionButtonClicked ? 'active-button' : '';
+    }
+
+    get managerButtonClass() {
+        return this.viewManagerFeedbackClicked ? 'active-button' : '';
+    }
+
     connectedCallback() {
         this.loadData();
     }

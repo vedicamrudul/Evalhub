@@ -122,12 +122,9 @@
                 <template for:each={filteredUserResponses} for:item="user">
                   <tr key={user.userId} class="slds-hint-parent">
                     <td data-label="User">
-                      <div class="slds-truncate" title={user.userName}>{user.userName}</div>
+                      <div class="slds-truncate text-bold"  title={user.userName}>{user.userName}</div>
                       <div class="slds-truncate slds-text-body_small" title={user.department}>
-                        {user.department} • {user.role}
-                        <template if:false={user.isActive}>
-                          • Inactive
-                        </template>
+                       {user.role}
                       </div>
                     </td>
                     <template if:true={isCBO}>
