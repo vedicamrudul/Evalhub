@@ -1,49 +1,68 @@
 import { LightningElement, wire, track } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
-import getAllForms from '@salesforce/apex/FormController.getAllForms';
-import getFilteredForms from '@salesforce/apex/FormController.getFilteredForms';
+import getCurrentUserPermissions from '@salesforce/apex/QuestionsController.getCurrentUserPermissions';
+import getFormsBasedOnUserRole from '@salesforce/apex/QuestionsController.getFormsBasedOnUserRole';
+import getFilteredFormsBasedOnUserRole from '@salesforce/apex/QuestionsController.getFilteredFormsBasedOnUserRole';
 import getQuestions from '@salesforce/apex/FormController.getQuestions';
 
-export default class ViewPreviousFormAdmin extends NavigationMixin(LightningElement) {
+export default class ViewAllPreviousForms extends NavigationMixin(LightningElement) {
     @track department = "All";
-    @track selectedMonth = 0; // 0 means all months
-    @track selectedYear = 0; // 0 means all years
+    @track selectedMonth = 0;
+    @track selectedYear = 0;
     @track filteredForms = [];
     @track isLoading = false;
+    @track userPermissions = {};
+    @track error;
     
-    // State to keep track of whether filters have been applied
     formData = [];
     
-    // Lifecycle hook - component connected
     connectedCallback() {
-        this.loadAllForms();
+        this.loadUserPermissions();
+    }
+
+    async loadUserPermissions() {
+        try {
+            this.userPermissions = await getCurrentUserPermissions();
+            
+            if (!this.userPermissions.canViewAllDepartments) {
+                this.department = this.userPermissions.userDepartment || 'All';
+            }
+            
+            this.loadAllForms();
+        } catch (error) {
+            console.error('Error loading user permissions:', error);
+            this.error = 'Error loading user permissions: ' + (error.body?.message || error.message);
+        }
     }
     
-    // Load all forms initially
     loadAllForms() {
         this.isLoading = true;
-        getAllForms()
+        getFormsBasedOnUserRole()
             .then(result => {
                 this.formData = JSON.parse(JSON.stringify(result));
                 this.processFormData();
                 this.isLoading = false;
+                this.error = null;
             })
             .catch(error => {
                 console.error('Error loading forms:', error);
+                this.error = 'Error loading forms: ' + (error.body?.message || error.message);
                 this.isLoading = false;
             });
     }
     
-    // Apply filters using Apex method
     applyFilters() {
         this.isLoading = true;
         
-        // Convert month and year to integers
         const monthVal = parseInt(this.selectedMonth, 10);
         const yearVal = parseInt(this.selectedYear, 10);
         
-        getFilteredForms({ 
-            department: this.department === 'All' ? null : this.department,
+        const deptToFilter = this.userPermissions.canViewAllDepartments ? 
+            (this.department === 'All' ? null : this.department) : 
+            this.userPermissions.userDepartment;
+        
+        getFilteredFormsBasedOnUserRole({ 
+            department: deptToFilter,
             month: monthVal,
             year: yearVal
         })
@@ -51,35 +70,37 @@ export default class ViewPreviousFormAdmin extends NavigationMixin(LightningElem
             this.formData = JSON.parse(JSON.stringify(result));
             this.processFormData();
             this.isLoading = false;
+            this.error = null;
         })
         .catch(error => {
             console.error('Error applying filters:', error);
+            this.error = 'Error applying filters: ' + (error.body?.message || error.message);
             this.isLoading = false;
         });
     }
     
-    // Reset all filters
     resetFilters() {
-        this.department = 'All';
+        if (this.userPermissions.canViewAllDepartments) {
+            this.department = 'All';
+        } else {
+            this.department = this.userPermissions.userDepartment || 'All';
+        }
         this.selectedMonth = 0;
         this.selectedYear = 0;
         this.loadAllForms();
     }
     
-    // Process the form data to extract month and year
     processFormData() {
         this.filteredForms = this.formData.map(form => {
             const formCopy = {...form};
             
-            // Extract month and year from Applicable_Month__c
             if (form.Applicable_Month__c) {
                 const dateObj = new Date(form.Applicable_Month__c);
-                formCopy._month = dateObj.getMonth() + 1; // JavaScript months are 0-indexed
+                formCopy._month = dateObj.getMonth() + 1;
                 formCopy._year = dateObj.getFullYear();
                 formCopy._monthName = this.getMonthName(dateObj.getMonth());
             }
             
-            // Initialize question-related properties
             formCopy.showQuestions = false;
             formCopy.isLoadingQuestions = false;
             formCopy.questions = null;
@@ -88,7 +109,6 @@ export default class ViewPreviousFormAdmin extends NavigationMixin(LightningElem
         });
     }
     
-    // Toggle showing/hiding questions for a form
     toggleQuestions(event) {
         const formId = event.currentTarget.dataset.id;
         const formIndex = this.filteredForms.findIndex(form => form.Id === formId);
@@ -97,13 +117,11 @@ export default class ViewPreviousFormAdmin extends NavigationMixin(LightningElem
         
         const form = this.filteredForms[formIndex];
         
-        // If already showing questions, hide them
         if (form.showQuestions) {
             this.filteredForms[formIndex].showQuestions = false;
             event.currentTarget.label = 'View Questions';
             event.currentTarget.iconName = 'utility:preview';
         } else {
-            // Otherwise, show questions and load them if not already loaded
             this.filteredForms[formIndex].showQuestions = true;
             event.currentTarget.label = 'Hide Questions';
             event.currentTarget.iconName = 'utility:chevrondown';
@@ -113,22 +131,19 @@ export default class ViewPreviousFormAdmin extends NavigationMixin(LightningElem
             }
         }
         
-        // Force refresh to show/hide questions
         this.filteredForms = [...this.filteredForms];
     }
     
-    // Load questions for a specific form
     loadQuestionsForForm(formId, formIndex) {
         this.filteredForms[formIndex].isLoadingQuestions = true;
         this.filteredForms = [...this.filteredForms];
         
         getQuestions({ formId: formId })
             .then(result => {
-                // Add question number to each question
                 const questionsWithNumbers = result.map((question, index) => {
                     return {
                         ...question,
-                        index: index + 1  // Add 1-based index
+                        index: index + 1
                     };
                 });
                 
@@ -143,12 +158,10 @@ export default class ViewPreviousFormAdmin extends NavigationMixin(LightningElem
             });
     }
     
-    // Navigate to the responses page
     viewResponses(event) {
         const formId = event.currentTarget.dataset.id;
         console.log('Navigating to ViewResponsesPage with formId:', formId);
         
-        // Navigate to the view responses page with formId as a parameter
         this[NavigationMixin.Navigate]({
             type: 'standard__navItemPage',
             attributes: {
@@ -160,7 +173,6 @@ export default class ViewPreviousFormAdmin extends NavigationMixin(LightningElem
         });
     }
     
-    // Get month name from month index
     getMonthName(monthIndex) {
         const months = [
             'January', 'February', 'March', 'April', 'May', 'June',
@@ -169,7 +181,6 @@ export default class ViewPreviousFormAdmin extends NavigationMixin(LightningElem
         return months[monthIndex];
     }
     
-    // Event handlers
     handleDepartmentChange(event) { 
         this.department = event.detail.value;
     }
@@ -181,8 +192,11 @@ export default class ViewPreviousFormAdmin extends NavigationMixin(LightningElem
     handleYearChange(event) {
         this.selectedYear = event.detail.value;
     }
+
+    clearError() {
+        this.error = null;
+    }
     
-    // Computed properties for displaying forms
     get hasFilteredForms() {
         return this.filteredForms && this.filteredForms.length > 0;
     }
@@ -214,14 +228,40 @@ export default class ViewPreviousFormAdmin extends NavigationMixin(LightningElem
         return null;
     }
     
-    // Options for filters
     get departmentOptionsList() {
+        if (!this.userPermissions.canViewAllDepartments) {
+            return [
+                { label: this.userPermissions.userDepartment || 'My Department', 
+                  value: this.userPermissions.userDepartment || 'All' }
+            ];
+        }
+        
         return [
             { label: 'All Departments', value: 'All' },
             { label: 'Technical', value: 'Technical' },
             { label: 'Marketing', value: 'Marketing' },
             { label: 'Sales', value: 'Sales' }
         ];
+    }
+
+    get showDepartmentFilter() {
+        return this.userPermissions.canViewAllDepartments;
+    }
+
+    get hideDepartmentFilter() {
+        return !this.userPermissions.canViewAllDepartments;
+    }
+
+    get userRoleLabel() {
+        return this.userPermissions.userRole || 'User';
+    }
+
+    get accessLevelLabel() {
+        if (this.userPermissions.canViewAllDepartments) {
+            return 'Executive Access - All Departments';
+        } else {
+            return `Department Access - ${this.userPermissions.userDepartment || 'Your Department'}`;
+        }
     }
     
     get monthOptionsList() {
@@ -246,7 +286,6 @@ export default class ViewPreviousFormAdmin extends NavigationMixin(LightningElem
         const currentYear = new Date().getFullYear();
         const years = [{ label: 'All Years', value: '0' }];
         
-        // Generate options for the last 5 years
         for (let i = 0; i < 5; i++) {
             const year = currentYear - i;
             years.push({ label: year.toString(), value: year.toString() });
@@ -254,6 +293,4 @@ export default class ViewPreviousFormAdmin extends NavigationMixin(LightningElem
         
         return years;
     }
-
-
 }

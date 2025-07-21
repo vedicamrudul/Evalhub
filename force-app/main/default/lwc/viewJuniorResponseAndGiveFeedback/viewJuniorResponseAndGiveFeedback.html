@@ -21,7 +21,6 @@
                   <div class="slds-text-heading_small">{displayUser.user.Name}</div>
                 </div>
                 <div class="slds-col slds-size_4-of-12">
-                  <!-- Optional additional info about the employee -->
                 </div>
                 <div class="slds-col slds-size_2-of-12 slds-text-align_right">
                   <lightning-button label={displayUser.isView} variant="brand" data-id={displayUser.user.Id}
@@ -113,7 +112,6 @@
 
                                 <!-- Manager has not submitted feedback -->
                                 <template if:false={displayUser.hasManagerSubmitted}>
-                                  <!-- Show feedback button or form based on state -->
                                   <template if:true={displayUser.showFeedbackForm}>
                                     <div class="slds-form-element">
                                       <label class="slds-form-element__label">Your

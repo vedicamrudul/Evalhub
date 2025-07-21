@@ -13,6 +13,19 @@ public with sharing class QuestionsController {
         @AuraEnabled
         public String employeeId { get; set; }
     }
+
+    public class UserPermissions {
+        @AuraEnabled
+        public Boolean canViewAllDepartments { get; set; }
+        @AuraEnabled
+        public Boolean canViewBranchFilters { get; set; }
+        @AuraEnabled
+        public String userDepartment { get; set; }
+        @AuraEnabled
+        public String userRole { get; set; }
+        @AuraEnabled
+        public Id userId { get; set; }
+    }
     
     private static User validateCurrentUser() {
         User currentUser = UserController.getCurrentUser();
@@ -20,6 +33,150 @@ public with sharing class QuestionsController {
             throw new AuraHandledException('User is not active or does not exist.');
         }
         return currentUser;
+    }
+
+    @AuraEnabled(cacheable=true)
+    public static UserPermissions getCurrentUserPermissions() {
+        User currentUser = validateCurrentUser();
+        
+        UserPermissions permissions = new UserPermissions();
+        permissions.userId = currentUser.Id;
+        permissions.userDepartment = currentUser.department__c;
+        
+        // Get user role information
+        User userWithRole = [SELECT Id, UserRole.Name FROM User WHERE Id = :currentUser.Id LIMIT 1];
+        permissions.userRole = userWithRole.UserRole?.Name;
+        
+        // Check if user has executive privileges (roles starting with 'C' or containing 'chief')
+        Boolean isExecutive = false;
+        if (permissions.userRole != null) {
+            String roleLower = permissions.userRole.toLowerCase();
+            isExecutive = permissions.userRole.startsWith('C') || roleLower.contains('chief');
+        }
+        
+        permissions.canViewAllDepartments = isExecutive;
+        permissions.canViewBranchFilters = isExecutive;
+        
+        return permissions;
+    }
+
+    @AuraEnabled(cacheable=true)
+    public static Map<String, Object> getAllUserResponsesForAdminWithPermissions(Id formId) {
+        UserPermissions permissions = getCurrentUserPermissions();
+        
+        if (permissions.canViewAllDepartments) {
+            // Executive users can see all responses (existing logic)
+            return getAllUserResponsesForAdmin(formId);
+        } else {
+            // Regular users can only see subordinates + their own response
+            return getUserResponsesForManager(formId, permissions.userId);
+        }
+    }
+
+    private static Map<String, Object> getUserResponsesForManager(Id formId, Id managerId) {
+        validateCurrentUser();
+
+        Feedback_Form__c form = [
+            SELECT Id, Title__c, Name, department__c 
+            FROM Feedback_Form__c 
+            WHERE Id = :formId
+            LIMIT 1
+        ];
+        
+        if (form == null) {
+            throw new AuraHandledException('Form not found');
+        }
+        
+        List<Feedback_Question__c> questions = getQuestionsByFormId(formId);
+        
+        // Get subordinate users + current user
+        List<User> subordinateUsers = UserController.getUsersUnderCurrentUser();
+        User currentUser = [SELECT Id, Name, department__c, UserRole.Name FROM User WHERE Id = :managerId LIMIT 1];
+        
+        List<User> allUsers = new List<User>();
+        allUsers.add(currentUser); // Add current user
+        allUsers.addAll(subordinateUsers); // Add subordinates
+        
+        Map<String, Object> result = new Map<String, Object>();
+        result.put('currentUserRole', currentUser.UserRole?.Name);
+        result.put('isCBO', false); // Regular users don't get CBO features
+        
+        return buildAdminResponseData(form, questions, allUsers);
+    }
+
+    @AuraEnabled(cacheable=true)
+    public static List<Feedback_Form__c> getFormsBasedOnUserRole() {
+        UserPermissions permissions = getCurrentUserPermissions();
+        
+        Date twelveMonthsAgo = System.today().addMonths(-12);
+        
+        if (permissions.canViewAllDepartments) {
+            // Executive users can see all forms
+            return [
+                SELECT Id, Title__c, department__c, Applicable_Month__c, Active_Flag__c
+                FROM Feedback_Form__c
+                WHERE Applicable_Month__c >= :twelveMonthsAgo
+                ORDER BY Applicable_Month__c DESC
+            ];
+        } else {
+            // Regular users can only see forms for their department
+            return [
+                SELECT Id, Title__c, department__c, Applicable_Month__c, Active_Flag__c
+                FROM Feedback_Form__c
+                WHERE Applicable_Month__c >= :twelveMonthsAgo
+                AND department__c = :permissions.userDepartment
+                ORDER BY Applicable_Month__c DESC
+            ];
+        }
+    }
+
+    @AuraEnabled(cacheable=true)
+    public static List<Feedback_Form__c> getFilteredFormsBasedOnUserRole(String department, Integer month, Integer year) {
+        UserPermissions permissions = getCurrentUserPermissions();
+        
+        String query = 'SELECT Id, Title__c, department__c, Applicable_Month__c, Active_Flag__c FROM Feedback_Form__c';
+        
+        List<String> conditions = new List<String>();
+        Map<String, Object> bindMap = new Map<String, Object>();
+        Integer index = 0;
+
+        // Always add the 12-month filter
+        conditions.add('Applicable_Month__c >= :p' + index);
+        bindMap.put('p' + index, System.today().addMonths(-12));
+        index++;
+
+        // Add department filter based on user role
+        if (!permissions.canViewAllDepartments) {
+            // Regular users can only see their department
+            conditions.add('department__c = :p' + index);
+            bindMap.put('p' + index, permissions.userDepartment);
+            index++;
+        } else if (department != null && department != 'All') {
+            // Executive users can filter by department
+            conditions.add('department__c = :p' + index);
+            bindMap.put('p' + index, department);
+            index++;
+        }
+
+        if (month != null && month > 0) {
+            conditions.add('CALENDAR_MONTH(Applicable_Month__c) = :p' + index);
+            bindMap.put('p' + index, month);
+            index++;
+        }
+
+        if (year != null && year > 0) {
+            conditions.add('CALENDAR_YEAR(Applicable_Month__c) = :p' + index);
+            bindMap.put('p' + index, year);
+            index++;
+        }
+
+        if (!conditions.isEmpty()) {
+            query += ' WHERE ' + String.join(conditions, ' AND ');
+        }
+
+        query += ' ORDER BY Applicable_Month__c DESC';
+
+        return Database.queryWithBinds(query, bindMap, AccessLevel.USER_MODE);
     }
     
     private static Feedback_Form__c getActiveFormByDepartment(String department) {
@@ -388,7 +545,6 @@ public with sharing class QuestionsController {
 
         Id currentUserId = UserInfo.getUserId();
         User currentUser = [Select UserRole.Name from User where Id = :currentUserId];
-        System.debug('currentUser.UserRole.Name: ' + currentUser.UserRole.Name);
         
         Feedback_Form__c form = [
             SELECT Id, Title__c, Name, department__c 
@@ -403,7 +559,6 @@ public with sharing class QuestionsController {
         
         List<Feedback_Question__c> questions = getQuestionsByFormId(formId);
         
-        // Get users with branch allocation data if CBO role
         Map<String, Object> result = new Map<String, Object>();
         result.put('currentUserRole', currentUser.UserRole.Name);
         result.put('isCBO', currentUser.UserRole.Name == 'CBO');
@@ -418,7 +573,6 @@ public with sharing class QuestionsController {
                 AND User__r.department__c = :form.department__c
             ];
             
-            // Extract user IDs and create maps
             Set<Id> userIds = new Set<Id>();
             Map<Id, Map<String, String>> userBranchMap = new Map<Id, Map<String, String>>();
             Set<String> allRegions = new Set<String>();
@@ -428,7 +582,6 @@ public with sharing class QuestionsController {
             for(BranchUserAllocation__c allocation : branchAllocations) {
                 userIds.add(allocation.User__r.Id);
                 
-                // Store branch information
                 userBranchMap.put(allocation.User__r.Id, new Map<String, String>{
                     'branchId' => allocation.Branch__r.Id,
                     'branchName' => allocation.Branch__r.Name,
@@ -436,7 +589,6 @@ public with sharing class QuestionsController {
                     'Cluster' => allocation.Branch__r.Cluster__c
                 });
                 
-                // Collect unique values for filters
                 if(String.isNotBlank(allocation.Branch__r.Region__c)) {
                     allRegions.add(allocation.Branch__r.Region__c);
                 }
@@ -448,14 +600,12 @@ public with sharing class QuestionsController {
                 }
             }
             
-            // Query users separately using the collected IDs
             List<User> allUsers = [
                 SELECT Id, Name, department__c, UserRole.Name
                 FROM User
                 WHERE Id IN :userIds
             ];
             
-            // Add filter options to result
             List<Map<String, String>> RegionOptions = new List<Map<String, String>>();
             for(String Region : allRegions) {
                 RegionOptions.add(new Map<String, String>{'label' => Region, 'value' => Region});
@@ -476,36 +626,8 @@ public with sharing class QuestionsController {
             result.put('branchOptions', branchOptions);
             result.put('userBranchMap', userBranchMap);
 
-            System.debug('result: ' + result);
-            /*
-           result: 
-            {ClusterOptions=
-            ({label=MUM-1, value=MUM-1}, {label=KRL-1, value=KRL-1}), RegionOptions=({label=West, value=West}, {label=South, value=South}), branchOptions=({label=Borivali, value=Borivali}, {label=Kochi, value=Kochi}), currentUserRole=CBO, isCBO=true, userBranchMap={005Qy00000QU25RIAT={Cluster=MUM-1, Region=West, branchId=a04Qy000006rfnxIAA, branchName=Borivali}, 005Qy00000QU2abIAD={Cluster=KRL-1, Region=South, branchId=a04Qy000006rcrjIAA, branchName=Kochi}}}
-            */
-            
-
-            /*
-            How Lightning Combobox Uses Both Label and Value
-            Here's what happens:
-            1. options={RegionFilterOptions} - This is where the label is used
-                When you pass the options array like this:
-                RegionOptions=({label=West, value=West}, {label=South, value=South})
-                The label is the text that appears in the dropdown, and the value is the actual value that gets stored when the user selects an option.
-                The Lightning combobox component internally uses the label to display the dropdown options that users see and click on.
-            2. value={selectedRegion} - This is where the value is used
-                When a user clicks on "North Region" in the dropdown, the combobox:
-                Takes the value from that option ('North Region')
-                Assigns it to selectedRegion
-                This triggers the onchange event
-                Visual Flow:
-                User sees: "North Region" (from label)
-                User clicks: "North Region"
-                Component stores: "North Region" (from value)
-                Variable gets: selectedRegion = "North Region"
-*/  
             return buildAdminResponseDataWithBranch(form, questions, allUsers, userBranchMap, result);
         } else {
-            // Regular flow for non-CBO users
             List<User> allUsers = [
                 SELECT Id, Name, department__c, UserRole.Name
                 FROM User
@@ -605,7 +727,8 @@ public with sharing class QuestionsController {
         finalResult.put('userResponses', userResponses);
         return finalResult;
     }
-    
+
+   
     private static Map<Id, Map<Id, String>> getUserQuestionResponseMap(List<Feedback_Question__c> questions, List<User> allUsers) {
         List<Feedback_Response__c> allResponses = [
             SELECT Id, Question_Lookup__c, Rating_Answer__c, Respondent__c

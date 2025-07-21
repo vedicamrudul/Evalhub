@@ -230,16 +230,16 @@
     min-width: 80px;
     /* background-color: #ffa7f2; */
 }
-.slds-table th:nth-child(3),
+/* .slds-table th:nth-child(3),
 .slds-table td:nth-child(3) {
     max-width: 100px;
     min-width: 80px;
-    /* background-color: #f403d0; */
-}
+    background-color: #f403d0;
+} */
 
 /* Question columns */
-.slds-table th:not(:first-child):not(:nth-child(2)):not(:nth-child(3)):not(:last-child),
-.slds-table td:not(:first-child):not(:nth-child(2)):not(:nth-child(3)):not(:last-child) {
+.slds-table th:not(:first-child):not(:nth-child(2)):not(:last-child),
+.slds-table td:not(:first-child):not(:nth-child(2)):not(:last-child) {
     max-width: 700px;
     min-width: 250px;
     /* background-color: #b1a55c; */

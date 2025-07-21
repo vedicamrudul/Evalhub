@@ -37,20 +37,11 @@ export default class CreateForm extends LightningElement {
         try {
             
             const metadataResult = await getInputTypesFromMetadata();
-            console.log('metadataResult', metadataResult);
-            console.log('metadataResult.inputTypeOptions', metadataResult.inputTypeOptions);
-            console.log('this is wehre we are')
             this.inputTypeOptions = metadataResult.inputTypeOptions;
             this.scaleConfigurations = metadataResult.scaleConfigurations;
             this.picklistGroups = metadataResult.picklistGroups || [];
             this.isLoadingMetadata = false;
-            
-            // console.log('metadataResult', metadataResult);
-            // console.log('inputTypeOptions', this.inputTypeOptions);
-            // console.log('scaleConfigurations', this.scaleConfigurations);
-            // console.log('picklistGroups', this.picklistGroups);
 
-            // Add one question by default after metadata is loaded
             this.handleAddQuestion();
         } catch (error) {
             console.error('Error loading input types metadata:', error);
@@ -70,37 +61,27 @@ export default class CreateForm extends LightningElement {
         const value = event.target.value;
         this.formDetails = { ...this.formDetails, [field]: value };
         
-        // If department changes, update the title if month is already selected
         if (field === 'department' && this.formDetails.applicableMonthInput) {
             this.generateTitle(value, this.formDetails.applicableMonthInput);
         }
     }
     
     handleMonthYearChange(event) {
-        // Get the month-year value (format: YYYY-MM)
         const monthYearValue = event.target.value;
-        console.log('monthYearValue', monthYearValue);
         
         if (monthYearValue) {
-            // Store the input value
             this.formDetails.applicableMonthInput = monthYearValue;
             
-            // Split the value to get year and month
             const [year, month] = monthYearValue.split('-');
             
-            // Create a date string with the 1st day of the selected month
-            // Format: YYYY-MM-DD (required by Salesforce)
             const formattedDate = `${year}-${month}-01`;
             
-            // Update the applicableMonth field with the formatted date
             this.formDetails.applicableMonth = formattedDate;
             
-            // Generate title if department is already selected
             if (this.formDetails.department) {
                 this.generateTitle(this.formDetails.department, monthYearValue);
             }
         } else {
-            // If input is cleared
             this.formDetails.applicableMonthInput = null;
             this.formDetails.applicableMonth = null;
             this.formDetails.title = '';
@@ -110,17 +91,14 @@ export default class CreateForm extends LightningElement {
     generateTitle(department, monthYearValue) {
         if (!department || !monthYearValue) return;
         
-        // Split the monthYearValue to get year and month number
         const [year, monthNum] = monthYearValue.split('-');
         
-        // Convert month number to month name
         const monthNames = [
             'January', 'February', 'March', 'April', 'May', 'June',
             'July', 'August', 'September', 'October', 'November', 'December'
         ];
         const monthName = monthNames[parseInt(monthNum) - 1];
         
-        // Generate title in format: "Department Feedback Month Year"
         this.formDetails.title = `${department} Feedback ${monthName} ${year}`;
     }
     
@@ -132,7 +110,6 @@ export default class CreateForm extends LightningElement {
         this.questions = this.questions.map((question, i) => {
             if (i === parseInt(index)) {
                 let updatedQuestion = { ...question, [field]: value };
-                // Update the showPicklistValues property if inputType changed
                 if (field === 'inputType') {
                     updatedQuestion.showPicklistValues = value === 'Picklist';
                     updatedQuestion.showScaleGroup = value !== 'Text' && value !== 'Picklist' && value !== 'Slider';
@@ -141,10 +118,9 @@ export default class CreateForm extends LightningElement {
                     updatedQuestion.picklistType = '';
                     updatedQuestion.showCustomPicklistValues = false;
                     updatedQuestion.scaleGroupOptions = this.getScaleGroupOptions(value);
-                    updatedQuestion.picklistTypeOptions = [...this.picklistGroups]; // Create new array reference
+                    updatedQuestion.picklistTypeOptions = [...this.picklistGroups];
                 }
                 
-                // Update custom picklist visibility if picklistType changed
                 if (field === 'picklistType') {
                     updatedQuestion.showCustomPicklistValues = value === 'Custom';
                     if (value !== 'Custom') {
@@ -152,7 +128,6 @@ export default class CreateForm extends LightningElement {
                     }
                 }
                 
-                // Update preview data when scale group changes
                 updatedQuestion.previewData = this.generatePreviewData(updatedQuestion.inputType, updatedQuestion.scaleGroup);
                 
                 return updatedQuestion;
@@ -175,7 +150,7 @@ export default class CreateForm extends LightningElement {
             showCustomPicklistValues: false,
             showScaleGroup: false,
             scaleGroupOptions: [],
-            picklistTypeOptions: [...this.picklistGroups], // Create new array reference
+            picklistTypeOptions: [...this.picklistGroups],
             scaleGroupKey: `scaleGroup-${newId}`,
             picklistKey: `picklist-${newId}`,
             displayNumber: newQuestionNumber,
@@ -224,7 +199,6 @@ export default class CreateForm extends LightningElement {
                 }))
             };
         } else if (inputType === 'Rating') {
-            // For rating, create 5 options using the same icon
             const icon = sortedConfigs[0] ? (sortedConfigs[0].valueStored || '⭐') : '⭐';
             return {
                 showPreview: true,
@@ -244,7 +218,6 @@ export default class CreateForm extends LightningElement {
         const index = event.target.dataset.index;
         this.questions = this.questions.filter((_, i) => i !== parseInt(index))
             .map((question, i) => {
-                // Update the displayNumber to maintain sequential numbering
                 return { ...question, displayNumber: i + 1 };
             });
     }
@@ -261,7 +234,6 @@ export default class CreateForm extends LightningElement {
     }
     
     handleSubmit() {
-        // Validate all questions before processing
         const invalidQuestions = this.questions.filter(q => q.questionText.length > 255 );
         const invalidPicklistValues = this.questions.filter(q => q.picklistValues && q.picklistValues.length > 100);
 
@@ -273,7 +245,7 @@ export default class CreateForm extends LightningElement {
                     variant: 'error'
                 })
             );
-            return; // Stop submission entirely
+            return;
         }
         if (invalidQuestions.length > 0) {
             this.dispatchEvent(
@@ -283,10 +255,9 @@ export default class CreateForm extends LightningElement {
                     variant: 'error'
                 })
             );
-            return; // Stop submission entirely
+            return;
         }
 
-        // Prepare the data for the Apex method
         const formWrapper = {
             title: this.formDetails.title,
             department: this.formDetails.department,
@@ -303,13 +274,11 @@ export default class CreateForm extends LightningElement {
             };
         });
         
-        // Call the Apex method
         createForm({ formWrapper, questionWrappers })
             .then(result => {
                 this.createdFormId = result;
                 this.showSuccessMessage = true;
                 
-                // Show toast message
                 this.dispatchEvent(
                     new ShowToastEvent({
                         title: 'Success',
@@ -318,13 +287,11 @@ export default class CreateForm extends LightningElement {
                     })
                 );
                 
-                // Reset the form
                 this.resetForm();
             })
             .catch(error => {
                 console.error('Error creating form:', error);
                 
-                // Check if it's the duplicate form error
                 const errorMsg = error.body && error.body.message || 'Unknown error';
                 const isDuplicateFormError = errorMsg.includes('A form already exists for this department and month');
                 
@@ -360,14 +327,13 @@ export default class CreateForm extends LightningElement {
             showCustomPicklistValues: false,
             showScaleGroup: false,
             scaleGroupOptions: [],
-            picklistTypeOptions: [...this.picklistGroups], // Create new array reference
+            picklistTypeOptions: [...this.picklistGroups],
             scaleGroupKey: `scaleGroup-${resetId}`,
             picklistKey: `picklist-${resetId}`,
             displayNumber: 1,
             previewData: this.generatePreviewData('Text', '')
         }];
         
-        // Hide success message after 5 seconds
         setTimeout(() => {
             this.showSuccessMessage = false;
         }, 5000);

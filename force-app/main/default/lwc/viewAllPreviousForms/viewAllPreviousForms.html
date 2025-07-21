@@ -1,18 +1,59 @@
 <template>
     <lightning-card title="Previous Evaluation Forms">
         <div class="slds-p-around_medium">
-            <div class="slds-grid slds-gutters slds-m-bottom_medium">
-                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
-                    <lightning-combobox 
-                        label="Filter by Department"
-                        class="filter-control"
-                        placeholder="Select Department"
-                        options={departmentOptionsList}
-                        value={department}
-                        onchange={handleDepartmentChange}>
-                    </lightning-combobox>
+            <!-- User Access Level Information -->
+            <template if:true={userPermissions.userRole}>
+                <div class="slds-box slds-theme_shade slds-m-bottom_medium">
+                    <div class="slds-grid slds-grid_align-spread">
+                        <div class="slds-col">
+                            <div class="slds-text-title_caps slds-text-color_weak">Current Access Level</div>
+                            <div class="slds-text-body_regular">{accessLevelLabel}</div>
+                        </div>
+                        <div class="slds-col">
+                            <div class="slds-text-title_caps slds-text-color_weak">Your Role</div>
+                            <div class="slds-text-body_regular">{userRoleLabel}</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-3">
+            </template>
+
+            <!-- Error Message -->
+            <template if:true={error}>
+                <div class="slds-m-bottom_medium">
+                    <div class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_error" role="alert">
+                        <span class="slds-assistive-text">Error</span>
+                        <div class="slds-grid slds-grid_align-spread">
+                            <div class="slds-col slds-grid slds-grid_align-center">
+                                <lightning-icon icon-name="utility:error" size="x-small" variant="inverse" class="slds-m-right_x-small"></lightning-icon>
+                                <h2>{error}</h2>
+                            </div>
+                            <div class="slds-col slds-no-flex">
+                                <lightning-button-icon icon-name="utility:close" variant="bare-inverse" onclick={clearError} 
+                                    alternative-text="Close"></lightning-button-icon>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Filter Controls -->
+            <div class="slds-grid slds-gutters slds-m-bottom_medium">
+                <!-- Department Filter - Only for Executive Users -->
+                <template if:true={showDepartmentFilter}>
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+                        <lightning-combobox 
+                            label="Filter by Department"
+                            class="filter-control"
+                            placeholder="Select Department"
+                            options={departmentOptionsList}
+                            value={department}
+                            onchange={handleDepartmentChange}>
+                        </lightning-combobox>
+                    </div>
+                </template>
+                
+                <!-- Month Filter -->
+                <div class="slds-col slds-size_1-of-2" class:slds-medium-size_1-of-3={showDepartmentFilter} class:slds-medium-size_1-of-2={hideDepartmentFilter}>
                     <lightning-combobox 
                         label="Filter by Month"
                         class="filter-control"
@@ -22,7 +63,9 @@
                         onchange={handleMonthChange}>
                     </lightning-combobox>
                 </div>
-                <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-3">
+                
+                <!-- Year Filter -->
+                <div class="slds-col slds-size_1-of-2" class:slds-medium-size_1-of-3={showDepartmentFilter} class:slds-medium-size_1-of-2={hideDepartmentFilter}>
                     <lightning-combobox 
                         label="Filter by Year"
                         class="filter-control"
