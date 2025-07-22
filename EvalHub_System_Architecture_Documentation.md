@@ -394,7 +394,197 @@ Scheduled Job → MonthlyFormActivatior → Feedback_Form__c (Active_Flag__c upd
 
 ---
 
-**Document Version:** 1.0  
+## 🧩 **DETAILED LIGHTNING WEB COMPONENT FUNCTION ANALYSIS**
+
+### **1. createForm Component**
+**Purpose:** Dynamic form builder for administrators
+
+#### **Component Functions:**
+
+| Function Name | Purpose | Parameters | Returns | Connects To |
+|---------------|---------|------------|---------|-------------|
+| `connectedCallback()` | Initialize component and load metadata | None | void | `loadInputTypesMetadata()` |
+| `loadInputTypesMetadata()` | Load question type configurations from metadata | None | Promise | FormController.getInputTypesFromMetadata |
+| `handleFormInputChange(event)` | Process form detail changes (title, department) | event | void | Internal state management |
+| `handleMonthYearChange(event)` | Handle month/year selection and format date | event | void | `generateTitle()` |
+| `generateTitle(department, monthYearValue)` | Auto-generate form title based on dept and month | department, monthYearValue | void | Internal state update |
+| `handleQuestionChange(event)` | Process question modifications and dynamic UI | event | void | `getScaleGroupOptions()`, `generatePreviewData()` |
+| `handleAddQuestion()` | Add new question to form | None | void | Internal array manipulation |
+| `getScaleGroupOptions(inputType)` | Get available scale groups for input type | inputType | Array | Metadata configurations |
+| `generatePreviewData(inputType, scaleGroup)` | Generate preview data for dynamic questions | inputType, scaleGroup | Object | Metadata processing |
+| `handleDeleteQuestion(event)` | Remove question from form | event | void | Array filtering |
+| `handleSubmit()` | Validate and submit form with questions | None | Promise | FormController.createForm |
+| `resetForm()` | Clear form after successful submission | None | void | Internal state reset |
+
+#### **Navigation & Connections:**
+- **Data Source:** FormController.getInputTypesFromMetadata
+- **Submission:** FormController.createForm
+- **User Flow:** Admin creates form → Form available for employees
+- **Dependencies:** Input_Scale_Config__mdt for dynamic question types
+
+---
+
+### **2. viewAllPreviousForms Component**
+**Purpose:** Form management dashboard with filtering and navigation
+
+#### **Component Functions:**
+
+| Function Name | Purpose | Parameters | Returns | Connects To |
+|---------------|---------|------------|---------|-------------|
+| `connectedCallback()` | Initialize component and load permissions | None | void | `loadUserPermissions()` |
+| `loadUserPermissions()` | Load current user's access permissions | None | Promise | QuestionsController.getCurrentUserPermissions |
+| `loadAllForms()` | Load all forms based on user role | None | Promise | QuestionsController.getFormsBasedOnUserRole |
+| `applyFilters()` | Apply department, month, year filters | None | Promise | QuestionsController.getFilteredFormsBasedOnUserRole |
+| `resetFilters()` | Clear all filters and reload | None | void | `loadAllForms()` |
+| `processFormData()` | Process form data and add display properties | None | void | Internal data transformation |
+| `toggleQuestions(event)` | Show/hide questions for a form | event | void | `loadQuestionsForForm()` |
+| `loadQuestionsForForm(formId, formIndex)` | Load questions for specific form | formId, formIndex | Promise | FormController.getQuestions |
+| `viewResponses(event)` | Navigate to responses view for form | event | void | **→ viewAllResponsesForGivenForm** |
+| `getMonthName(monthIndex)` | Convert month index to name | monthIndex | String | Utility function |
+| `handleDepartmentChange(event)` | Handle department filter change | event | void | Filter state management |
+| `handleMonthChange(event)` | Handle month filter change | event | void | Filter state management |
+| `handleYearChange(event)` | Handle year filter change | event | void | Filter state management |
+| `clearError()` | Clear error messages | None | void | Error state management |
+
+#### **Navigation & Connections:**
+- **Data Sources:** QuestionsController.getCurrentUserPermissions, QuestionsController.getFormsBasedOnUserRole
+- **Navigation Target:** viewAllResponsesForGivenForm (via standard__navItemPage)
+- **User Flow:** Admin views forms → Selects form → Views responses
+- **Role-Based Access:** Executive users see all departments, others see only their department
+
+---
+
+### **3. viewAllResponsesForGivenForm Component**
+**Purpose:** Comprehensive response viewing and filtering for admins/managers
+
+#### **Component Functions:**
+
+| Function Name | Purpose | Parameters | Returns | Connects To |
+|---------------|---------|------------|---------|-------------|
+| `getPageReference(pageRef)` | Extract form ID from URL parameters | pageRef | void | **← viewAllPreviousForms** |
+| `loadUserPermissions()` | Load current user permissions | None | Promise | QuestionsController.getCurrentUserPermissions |
+| `loadUserResponses()` | Load all user responses for form | None | Promise | QuestionsController.getAllUserResponsesForAdminWithPermissions |
+| `processBranchFilterOptions(result)` | Setup branch filtering for CBO users | result | void | Branch hierarchy setup |
+| `processUserResponsesData()` | Process and format response data | None | void | `formatResponseByType()` |
+| `formatResponseByType(answer, inputType)` | Format responses based on question type | answer, inputType | String | `formatRatingForAdmin()` |
+| `formatRatingForAdmin(answer)` | Format rating responses for admin view | answer | String | Metadata reference handling |
+| `applyFilters()` | Apply search, view, and branch filters | None | void | Filter processing |
+| `handleSearchChange(event)` | Handle search term changes | event | void | `applyFilters()` |
+| `handleViewOptionChange(event)` | Handle view filter changes | event | void | `applyFilters()` |
+| `handleRegionFilterChange(event)` | Handle region filter for CBO users | event | void | `updateDependentFilters()` |
+| `handleClusterFilterChange(event)` | Handle cluster filter for CBO users | event | void | `updateDependentFilters()` |
+| `handleBranchFilterChange(event)` | Handle branch filter for CBO users | event | void | `applyFilters()` |
+| `updateDependentFilters()` | Update dependent filter options | None | void | Cascade filtering |
+| `navigateBack()` | Navigate back to forms list | None | void | **→ viewAllPreviousForms** |
+| `refreshData()` | Refresh all data and clear filters | None | void | `loadUserResponses()` |
+| `showToast(title, message, variant)` | Display toast notifications | title, message, variant | void | Platform events |
+| `reduceErrors(errors)` | Process and format error messages | errors | String | Error handling |
+
+#### **Navigation & Connections:**
+- **Entry Point:** viewAllPreviousForms (receives formId via URL state)
+- **Data Source:** QuestionsController.getAllUserResponsesForAdminWithPermissions
+- **Navigation Back:** viewAllPreviousForms
+- **Special Features:** Branch filtering for CBO users, Role-based data access
+
+---
+
+### **4. viewJuniorResponseAndGiveFeedback Component**
+**Purpose:** Manager dashboard for reviewing team responses and providing feedback
+
+#### **Component Functions:**
+
+| Function Name | Purpose | Parameters | Returns | Connects To |
+|---------------|---------|------------|---------|-------------|
+| `wiredUsersUnderCurrentUser({error, data})` | Wire method to get direct subordinates | {error, data} | void | UserController.getUsersUnderCurrentUser |
+| `handleViewClick(event)` | Toggle employee response view | event | void | `fetchEmployeeResponses()` |
+| `fetchEmployeeResponses(userId)` | Load employee responses for manager review | userId | Promise | QuestionsController.getEmployeeResponseForManager |
+| `handleShowFeedbackInput(event)` | Show feedback input form | event | void | UI state management |
+| `handleFeedbackChange(event)` | Handle manager feedback text changes | event | void | Text input management |
+| `handleSubmitFeedback(event)` | Submit manager feedback | event | Promise | QuestionsController.submitManagerResponse |
+| `handleCancelFeedback(event)` | Cancel feedback input | event | void | UI state reset |
+| `showToast(title, message, variant)` | Display toast notifications | title, message, variant | void | Platform events |
+| `extractErrorMessage(error)` | Extract error messages from responses | error | String | Error handling |
+
+#### **Navigation & Connections:**
+- **Data Sources:** UserController.getUsersUnderCurrentUser, QuestionsController.getEmployeeResponseForManager
+- **Submission:** QuestionsController.submitManagerResponse
+- **User Flow:** Manager views team → Expands employee → Reviews responses → Provides feedback
+- **Validation:** 500 character limit on feedback, required feedback validation
+
+---
+
+### **5. yourQuestionAnswerComp Component**
+**Purpose:** Employee feedback submission and viewing interface
+
+#### **Component Functions:**
+
+| Function Name | Purpose | Parameters | Returns | Connects To |
+|---------------|---------|------------|---------|-------------|
+| `connectedCallback()` | Initialize component | None | void | `loadData()` |
+| `loadData()` | Load user data and feedback form | None | Promise | UserController.getCurrentUser, QuestionsController.getFeedbackData |
+| `processFeedbackData(data)` | Process and setup question types | data | void | Question type configuration |
+| `handleSendEmailOnFeedbackSubmit()` | Send email notifications | None | Promise | EmailController.sendEmailOnFeedbackSubmit |
+| `getPicklistOptions(valueString)` | Parse picklist values from string | valueString | Array | Option parsing |
+| `createRatingOptions(scaleOptions)` | Create rating button options | scaleOptions | Array | Rating UI setup |
+| `formatRatingForDisplay(ratingAnswer, scaleOptions)` | Format rating for display | ratingAnswer, scaleOptions | String | Display formatting |
+| `handleStarClick(event)` | Handle rating star selection | event | void | Rating input handling |
+| `handleEmojiClick(event)` | Handle emoji selection | event | void | Emoji input handling |
+| `handleSliderChange(event)` | Handle slider value changes | event | void | Slider input handling |
+| `handleSubmit()` | Validate and submit all responses | None | Promise | QuestionsController.submitFeedback |
+| `updateSubmittedFeedback(answers)` | Update UI after successful submission | answers | void | UI state update |
+| `handleViewSubmissionClick()` | Toggle submission view | None | void | View state management |
+| `handleViewManagerClick()` | Toggle manager feedback view | None | void | View state management |
+| `showToast(title, message, variant)` | Display toast notifications | title, message, variant | void | Platform events |
+
+#### **Navigation & Connections:**
+- **Data Sources:** UserController.getCurrentUser, QuestionsController.getFeedbackData
+- **Submission:** QuestionsController.submitFeedback
+- **Email Integration:** EmailController.sendEmailOnFeedbackSubmit
+- **User Flow:** Employee submits feedback → Manager receives notification → Manager can review
+- **Validation:** 500 character limit on text responses, required field validation
+
+---
+
+## 🔗 **COMPONENT INTERCONNECTION MATRIX**
+
+### **Direct Navigation Flows:**
+
+| Source Component | Target Component | Trigger | Data Passed |
+|------------------|------------------|---------|-------------|
+| viewAllPreviousForms | viewAllResponsesForGivenForm | viewResponses() | formId via URL state |
+| viewAllResponsesForGivenForm | viewAllPreviousForms | navigateBack() | None |
+
+### **Data Flow Dependencies:**
+
+| Component | Depends On | Data Type | Purpose |
+|-----------|------------|-----------|---------|
+| createForm | FormController | Metadata, Form Creation | Question type configs, form submission |
+| viewAllPreviousForms | QuestionsController | Permissions, Forms | User permissions, form list |
+| viewAllResponsesForGivenForm | QuestionsController | Responses, Permissions | User responses, access control |
+| viewJuniorResponseAndGiveFeedback | UserController, QuestionsController | Users, Responses | Team hierarchy, employee responses |
+| yourQuestionAnswerComp | UserController, QuestionsController, EmailController | User, Feedback, Email | User context, form data, notifications |
+
+### **Shared Apex Controller Usage:**
+
+| Apex Controller | Used By | Methods Called |
+|-----------------|---------|----------------|
+| **FormController** | createForm, viewAllPreviousForms | getInputTypesFromMetadata, createForm, getQuestions |
+| **QuestionsController** | viewAllPreviousForms, viewAllResponsesForGivenForm, viewJuniorResponseAndGiveFeedback, yourQuestionAnswerComp | getCurrentUserPermissions, getFormsBasedOnUserRole, getFilteredFormsBasedOnUserRole, getAllUserResponsesForAdminWithPermissions, getEmployeeResponseForManager, submitManagerResponse, getFeedbackData, submitFeedback |
+| **UserController** | viewJuniorResponseAndGiveFeedback, yourQuestionAnswerComp | getUsersUnderCurrentUser, getCurrentUser |
+| **EmailController** | yourQuestionAnswerComp | sendEmailOnFeedbackSubmit |
+
+### **Component State Interactions:**
+
+| Interaction Type | Components Involved | Description |
+|------------------|-------------------|-------------|
+| **Form Creation → Employee Access** | createForm → yourQuestionAnswerComp | Admin creates form, employees can access for submission |
+| **Employee Submission → Manager Review** | yourQuestionAnswerComp → viewJuniorResponseAndGiveFeedback | Employee submits, manager receives notification and can review |
+| **Manager Response → Employee View** | viewJuniorResponseAndGiveFeedback → yourQuestionAnswerComp | Manager provides feedback, employee can view in submission history |
+| **Form Selection → Response Analysis** | viewAllPreviousForms → viewAllResponsesForGivenForm | Admin selects form, views all responses with analytics |
+
+---
+
+**Document Version:** 1.1  
 **Last Updated:** January 2025  
 **Prepared for:** System Architecture Presentation  
 **Project:** EvalHub Employee Feedback Management System 
