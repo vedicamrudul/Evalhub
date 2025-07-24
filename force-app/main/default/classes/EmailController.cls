@@ -18,6 +18,97 @@ public with sharing class EmailController {
         }
     }
     
+    // New method to send emails to all department employees when a form is created
+    public static void sendFormCreationNotification(List<Feedback_Form__c> newForms) {
+        try {
+            // Group forms by department
+            Map<String, List<Feedback_Form__c>> formsByDepartment = new Map<String, List<Feedback_Form__c>>();
+            
+            for (Feedback_Form__c form : newForms) {
+                if (String.isNotBlank(form.department__c)) {
+                    if (!formsByDepartment.containsKey(form.department__c)) {
+                        formsByDepartment.put(form.department__c, new List<Feedback_Form__c>());
+                    }
+                    formsByDepartment.get(form.department__c).add(form);
+                }
+            }
+            
+            // Get all users for each department
+            List<User> departmentUsers = [
+                SELECT Id, Name, Email, department__c 
+                FROM User 
+                WHERE department__c IN :formsByDepartment.keySet()
+                AND IsActive = true
+                AND Email != null
+                AND Profile.Name != 'System Administrator'
+            ];
+            
+            // Group users by department
+            Map<String, List<User>> usersByDepartment = new Map<String, List<User>>();
+            for (User user : departmentUsers) {
+                if (!usersByDepartment.containsKey(user.department__c)) {
+                    usersByDepartment.put(user.department__c, new List<User>());
+                }
+                usersByDepartment.get(user.department__c).add(user);
+            }
+            
+            // Send emails for each department that has new forms
+            List<Messaging.SingleEmailMessage> emailsToSend = new List<Messaging.SingleEmailMessage>();
+            
+            for (String department : formsByDepartment.keySet()) {
+                List<Feedback_Form__c> deptForms = formsByDepartment.get(department);
+                List<User> deptUsers = usersByDepartment.get(department);
+                
+                if (deptUsers != null && !deptUsers.isEmpty()) {
+                    for (Feedback_Form__c form : deptForms) {
+                        for (User user : deptUsers) {
+                            Messaging.SingleEmailMessage email = createFormNotificationEmail(user, form);
+                            emailsToSend.add(email);
+                        }
+                    }
+                }
+            }
+            
+            // Send all emails in batch
+            if (!emailsToSend.isEmpty()) {
+                Messaging.sendEmail(emailsToSend);
+            }
+            
+        } catch (Exception e) {
+            System.debug('Error sending form creation emails: ' + e.getMessage());
+        }
+    }
+    
+    private static Messaging.SingleEmailMessage createFormNotificationEmail(User user, Feedback_Form__c form) {
+        String orgUrl = 'https://homefirstfinance4-dev-ed.develop.lightning.force.com/lightning/n/Employee_Q_and_A';
+        
+        String subject = 'New Feedback Form Available - ' + form.Title__c;
+        
+        String body = 'Dear ' + user.Name + ',\n\n' +
+            'A new feedback form has been created for your department and is now available for completion.\n\n' +
+            'FORM DETAILS:\n' +
+            '• Form Title: ' + form.Title__c + '\n' +
+            '• Department: ' + form.department__c + '\n' +
+            '• Applicable Month: ' + (form.Applicable_Month__c != null ? form.Applicable_Month__c.format() : 'Not specified') + '\n' +
+            '• Status: ' + (form.Active_Flag__c ? 'Active - Ready to Complete' : 'Available Soon') + '\n\n' +
+            'ACTION REQUIRED:\n' +
+            '• Complete your feedback form: ' + orgUrl + '\n' +
+            '• Please submit your responses by the end of the month\n' +
+            '• Your feedback is important for continuous improvement\n\n' +
+            'If you have any questions about the feedback process, please contact your manager or system administrator.\n\n' +
+            'Thank you for your participation!\n\n' +
+            'Best regards,\n' +
+            'EvalHub System\n' +
+            'Automated Email - Please do not reply';
+        
+        Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
+        email.setToAddresses(new List<String>{user.Email});
+        email.setSubject(subject);
+        email.setPlainTextBody(body);
+        
+        return email;
+    }
+    
     private static void sendEmployeeEmail(User user, String orgUrl) {
         String subject = 'Feedback Submitted Successfully - Action Required';
         

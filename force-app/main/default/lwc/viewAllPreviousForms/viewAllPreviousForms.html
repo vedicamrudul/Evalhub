@@ -53,7 +53,7 @@
                 </template>
                 
                 <!-- Month Filter -->
-                <div class="slds-col slds-size_1-of-2" class:slds-medium-size_1-of-3={showDepartmentFilter} class:slds-medium-size_1-of-2={hideDepartmentFilter}>
+                <div class={monthFilterClasses}>
                     <lightning-combobox 
                         label="Filter by Month"
                         class="filter-control"
@@ -65,7 +65,7 @@
                 </div>
                 
                 <!-- Year Filter -->
-                <div class="slds-col slds-size_1-of-2" class:slds-medium-size_1-of-3={showDepartmentFilter} class:slds-medium-size_1-of-2={hideDepartmentFilter}>
+                <div class={yearFilterClasses}>
                     <lightning-combobox 
                         label="Filter by Year"
                         class="filter-control"

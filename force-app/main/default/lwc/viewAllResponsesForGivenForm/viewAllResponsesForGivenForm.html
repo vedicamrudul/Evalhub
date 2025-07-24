@@ -18,12 +18,6 @@
               onclick={clearError}></lightning-button-icon>
           </div>
         </div>
-        <template if:false={formId}>
-          <div class="slds-p-around_medium slds-text-align_center">
-            <lightning-button label="Go Back to Forms" icon-name="utility:back" variant="brand"
-              onclick={navigateBack}></lightning-button>
-          </div>
-        </template>
       </template>
 
       <!-- User Access Level Information -->
@@ -51,7 +45,6 @@
           </div>
           <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3 slds-text-align_right">
             <lightning-button-group>
-              <lightning-button label="Back" icon-name="utility:back" onclick={navigateBack}></lightning-button>
               <lightning-button label="Refresh" icon-name="utility:refresh" onclick={refreshData}></lightning-button>
             </lightning-button-group>
           </div>
@@ -207,7 +200,6 @@
             <h3 class="slds-text-heading_small slds-m-bottom_xx-small">No Form Selected</h3>
             <p class="slds-text-body_small">Please select a form to view responses.</p>
             <div class="slds-m-top_medium">
-              <lightning-button variant="brand" label="Go to Forms" onclick={navigateBack}></lightning-button>
             </div>
           </div>
         </div>

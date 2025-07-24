@@ -263,6 +263,22 @@ export default class ViewAllPreviousForms extends NavigationMixin(LightningEleme
             return `Department Access - ${this.userPermissions.userDepartment || 'Your Department'}`;
         }
     }
+
+    get monthFilterClasses() {
+        if (this.showDepartmentFilter) {
+            return 'slds-col slds-size_1-of-2 slds-medium-size_1-of-3';
+        } else {
+            return 'slds-col slds-size_1-of-2 slds-medium-size_1-of-2';
+        }
+    }
+
+    get yearFilterClasses() {
+        if (this.showDepartmentFilter) {
+            return 'slds-col slds-size_1-of-2 slds-medium-size_1-of-3';
+        } else {
+            return 'slds-col slds-size_1-of-2 slds-medium-size_1-of-2';
+        }
+    }
     
     get monthOptionsList() {
         return [

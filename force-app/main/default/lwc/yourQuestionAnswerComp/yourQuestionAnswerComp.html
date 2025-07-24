@@ -101,7 +101,6 @@
 
                                 <template if:true={question.isEmoji}>
                                     <div class="emoji-container">
-                                        <label class="slds-form-element__label">How satisfied are you?</label>
                                         <div class="emoji-rating" data-id={question.id}>
                                             <template for:each={question.scaleOptions} for:item="option">
                                                 <button key={option.order} type="button" class="emoji-button" 
